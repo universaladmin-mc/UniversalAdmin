@@ -18,6 +18,21 @@ public interface Migration {
 
     int version();
 
+    /**
+     * Whose numbering {@link #version()} belongs to. An extension returns its
+     * own name - lowercase, e.g. its plugin name - and numbers its migrations
+     * from 1; they are tracked apart from UniversalAdmin's and every other
+     * extension's ({@code ua_extension_migrations}), so two extensions can
+     * never take each other's numbers. The empty default is the numbering
+     * shared with UniversalAdmin itself ({@code schema_version}), which is
+     * what migrations written before API 1.8 use.
+     *
+     * @since 1.8
+     */
+    default String namespace() {
+        return "";
+    }
+
     String description();
 
     void migrate(Connection connection) throws SQLException;

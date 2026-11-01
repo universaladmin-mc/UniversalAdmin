@@ -35,6 +35,12 @@ public final class PerformanceWorldsPage extends AbstractGuiPage {
         return text("performance.gui.worlds.title");
     }
 
+    /** Players, chunks and entities change while you look. */
+    @Override
+    public boolean live() {
+        return true;
+    }
+
     @Override
     protected void renderContent(GuiRenderContext context) {
         GuiView view = context.view();

@@ -7,6 +7,52 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-11-01
+
+The second half of the menu overhaul, and a look over everything else:
+compatibility, migrations and how easy UniversalAdmin is to use.
+
+### Added
+
+- **Server, worlds and performance as hubs**, like the player profile: what
+  you see in a light blue row, what you do in rows behind coloured labels -
+  green harmless, orange with an effect on players, red dangerous.
+- **Live values**: the main menu, server, worlds, a world and performance
+  update once a second while open.
+- **Traffic lights** on the performance page: TPS, MSPT and memory in green,
+  yellow or red, measured against your alert thresholds.
+- **A world's settings show their value**: time (as a clock), weather,
+  difficulty, spawn and world border show what they are now and change on a
+  click.
+- **The audit log reads in the server's language**: "Ban - Admin banned
+  Notch for 7d: Griefing" instead of `core:moderation.ban` and an English
+  sentence. See [ADR 0028](docs/architecture/decisions/0028-audit-log-in-the-servers-language.md).
+- **Minecraft's names in your game's language**: game modes, difficulties,
+  effects and entities ("Überlebensmodus", "Eile") instead of `SURVIVAL`,
+  `SPEED`.
+- **New options reach your config.yml**: an update writes options it brings
+  into your existing file with their explanation; the console lists them.
+- **A hint for staff on their first join**: `/admin` opens the menu - and if
+  your game runs in a language UniversalAdmin ships that the server does not
+  use, one click switches it.
+
+### Fixed
+
+- Heal, feed, extinguish, clear effects and the flight, glow, gravity and
+  collision switches wrote their raw input into the audit log
+  (`PlayerTargetInput[targetId=...]`).
+- The used deprecated `getBedSpawnLocation` and effect `getName` are
+  replaced.
+
+### For extension developers
+
+- API 1.8: `GuiRows`, `GuiButton#display`, `GuiPage#live()`,
+  `ActionDefinition.Builder#auditArgs`, `Migration#namespace()` (your own
+  numbering in `ua_extension_migrations`), `MessageService#get(locale, ...)`.
+  Everything has a default; extensions built against API 1.7 keep working.
+- `./gradlew build` checks the jar against the Paper API of 1.21.7, 1.21.11
+  and the version compiled against (`binaryCompatibility`).
+
 ## [1.8.0] - 2026-10-28
 
 The menus got a new look: a frame in every module's colour, glass panes

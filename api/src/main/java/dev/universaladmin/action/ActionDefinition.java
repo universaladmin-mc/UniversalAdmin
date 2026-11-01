@@ -1,6 +1,7 @@
 package dev.universaladmin.action;
 
 import dev.universaladmin.permission.PermissionNode;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.BooleanSupplier;
@@ -23,6 +24,7 @@ import java.util.function.Function;
  * @param auditFailures   whether a failed execution (denied, invalid, or thrown) is also recorded - useful for security-relevant actions
  * @param auditSummary    builds the audit summary text from the input
  * @param auditDetails    builds the audit entry's reason/old-new-value/world-position/metadata/correlation id from input and result - see {@link AuditDetails}
+ * @param auditArgs       the values the audit log's translated sentence needs besides actor and target - see {@link Builder#auditArgs}
  */
 public record ActionDefinition<I, R>(
         Action<I, R> action,
@@ -35,7 +37,18 @@ public record ActionDefinition<I, R>(
         boolean audited,
         boolean auditFailures,
         Function<I, String> auditSummary,
-        BiFunction<I, ActionResult<R>, AuditDetails> auditDetails) {
+        BiFunction<I, ActionResult<R>, AuditDetails> auditDetails,
+        Function<I, List<?>> auditArgs) {
+
+    /** The shape before API 1.8 - no values for the translated sentence. */
+    public ActionDefinition(
+            Action<I, R> action, PermissionNode permission, ActionValidator<I> validator,
+            Function<I, Optional<ActionTarget>> targetExtractor, SelfTargetPolicy selfTargetPolicy, BooleanSupplier enabledCheck,
+            String module, boolean audited, boolean auditFailures, Function<I, String> auditSummary,
+            BiFunction<I, ActionResult<R>, AuditDetails> auditDetails) {
+        this(action, permission, validator, targetExtractor, selfTargetPolicy, enabledCheck, module, audited, auditFailures,
+                auditSummary, auditDetails, input -> List.of());
+    }
 
     public ActionId id() {
         return action.id();
@@ -66,6 +79,7 @@ public record ActionDefinition<I, R>(
         private boolean auditFailures = false;
         private Function<I, String> auditSummary;
         private BiFunction<I, ActionResult<R>, AuditDetails> auditDetails = (input, result) -> AuditDetails.EMPTY;
+        private Function<I, List<?>> auditArgs = input -> List.of();
 
         private Builder(Action<I, R> action) {
             this.action = action;
@@ -133,9 +147,28 @@ public record ActionDefinition<I, R>(
             return this;
         }
 
+        /**
+         * The values the audit log's sentence needs besides the actor
+         * ({@code {0}}) and the target ({@code {1}}), in order as
+         * {@code {2}}, {@code {3}}, ... - e.g. the reason of a kick. The
+         * sentence itself comes from the language files
+         * ({@code audit.entry.<namespace>.<action-name-with-dashes>.text}), so
+         * it reads in the server's language, also for old entries; the
+         * English {@link #auditSummary} stays stored for the console, Discord
+         * and exports. A value {@code "lang:<key>"} is shown as the client's
+         * own translation (Minecraft's names, e.g. {@code lang:gameMode.creative}),
+         * {@code "text:<key>"} as a text from the language files.
+         *
+         * @since 1.8
+         */
+        public Builder<I, R> auditArgs(Function<I, List<?>> auditArgs) {
+            this.auditArgs = auditArgs;
+            return this;
+        }
+
         public ActionDefinition<I, R> build() {
             return new ActionDefinition<>(action, permission, validator, targetExtractor, selfTargetPolicy,
-                    enabledCheck, module, audited, auditFailures, auditSummary, auditDetails);
+                    enabledCheck, module, audited, auditFailures, auditSummary, auditDetails, auditArgs);
         }
     }
 }

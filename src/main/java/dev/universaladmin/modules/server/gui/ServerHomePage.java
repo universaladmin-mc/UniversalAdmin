@@ -5,10 +5,11 @@ import dev.universaladmin.gui.AbstractGuiPage;
 import dev.universaladmin.gui.ConfirmationDialog;
 import dev.universaladmin.gui.GuiButton;
 import dev.universaladmin.gui.GuiForm;
+import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.gui.GuiItem;
-import dev.universaladmin.gui.GuiLayout;
 import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRenderContext;
+import dev.universaladmin.gui.GuiRows;
 import dev.universaladmin.gui.GuiTextInput;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.modules.server.MaintenanceScope;
@@ -22,7 +23,11 @@ import dev.universaladmin.settings.CoreSettings;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -37,8 +42,6 @@ public final class ServerHomePage extends AbstractGuiPage {
 
     public static final GuiPageId ID = GuiPageId.core("server.home");
 
-    private static final int TILE_START = GuiLayout.CONTENT_START_SLOT;
-
     private final ServerGuiContext ctx;
 
     public ServerHomePage(ServerGuiContext ctx) {
@@ -51,47 +54,61 @@ public final class ServerHomePage extends AbstractGuiPage {
         return text("server.gui.home.title");
     }
 
+    /** Uptime, players, memory and CPU change while you look. */
+    @Override
+    public boolean live() {
+        return true;
+    }
+
     @Override
     protected void renderContent(GuiRenderContext context) {
         GuiView view = context.view();
         Player viewer = context.viewer();
-
-        renderDashboard(view);
-        renderMaintenanceTile(view);
-        renderNavigation(view, viewer);
-        renderPendingBanner(view, viewer);
+        GuiRows.place(view, viewer, 0, 0, GuiGlass.LIGHT_BLUE, text("server.gui.home.row.status"), statusTiles());
+        GuiRows.place(view, viewer, 1, 0, GuiGlass.LIME, text("server.gui.home.row.broadcast"), List.of(
+                new GuiButton(GuiItem.of(Material.PAPER, text("server.gui.home.broadcast-message")),
+                        ServerPermissions.BROADCAST, clickCtx -> promptBroadcastMessage(clickCtx.viewer())),
+                new GuiButton(GuiItem.of(Material.OAK_SIGN, text("server.gui.home.broadcast-title")),
+                        ServerPermissions.BROADCAST, clickCtx -> promptBroadcastTitle(clickCtx.viewer())),
+                new GuiButton(GuiItem.of(Material.NAME_TAG, text("server.gui.home.broadcast-actionbar")),
+                        ServerPermissions.BROADCAST, clickCtx -> promptBroadcastActionbar(clickCtx.viewer()))));
+        GuiRows.place(view, viewer, 2, 0, GuiGlass.ORANGE, text("server.gui.home.row.maintenance"), List.of(maintenanceTile(viewer)));
+        GuiRows.place(view, viewer, 3, 0, GuiGlass.RED, text("server.gui.home.row.lifecycle"), lifecycleButtons(viewer));
     }
 
-    private void renderDashboard(GuiView view) {
+    /** What the server is and how it is doing - the value in the name, readable without hovering. */
+    private List<GuiButton> statusTiles() {
         ServerDashboardSnapshot snapshot = ctx.dashboardService().snapshot();
-        int slot = TILE_START;
-        view.place(slot++, GuiItem.of(Material.BOOK, text("server.gui.home.version"), List.of(
-                text("server.gui.home.version-lore", snapshot.pluginVersion(), snapshot.paperVersion(),
-                        snapshot.minecraftVersion(), snapshot.javaVersion()))));
-        view.place(slot++, GuiItem.of(Material.CLOCK, text("server.gui.home.uptime"), List.of(
-                Component.text(formatUptime(snapshot.uptime())))));
-        view.place(slot++, GuiItem.of(Material.PLAYER_HEAD, text("server.gui.home.players"), List.of(
-                Component.text(snapshot.onlinePlayers() + " / " + snapshot.maxPlayers()))));
-        view.place(slot++, GuiItem.of(Material.GRASS_BLOCK, text("server.gui.home.worlds"), List.of(
-                Component.text(snapshot.worldCount()))));
-        view.place(slot++, GuiItem.of(Material.REDSTONE, text("server.gui.home.memory"), List.of(
-                Component.text(formatMegabytes(snapshot.usedMemoryBytes()) + " MB / " + formatMegabytes(snapshot.maxMemoryBytes()) + " MB"))));
-        Component cpuLoad = snapshot.cpuLoadPercent().isPresent()
-                ? Component.text(String.format("%.1f%%", snapshot.cpuLoadPercent().getAsDouble()))
-                : text("server.gui.home.cpu-unavailable");
-        view.place(slot++, GuiItem.of(Material.COMPARATOR, text("server.gui.home.cpu"), List.of(
-                cpuLoad, Component.text(snapshot.availableProcessors() + " cores"))));
-        view.place(slot++, GuiItem.of(Material.ENDER_CHEST, text("server.gui.home.database"), List.of(
-                Component.text(snapshot.databaseStatus().name()))));
-        view.place(slot, GuiItem.of(Material.CHEST, text("server.gui.home.modules"), List.of(
-                Component.text(String.join(", ", snapshot.enabledModules())))));
+        String cpu = snapshot.cpuLoadPercent().isPresent()
+                ? String.format(Locale.ROOT, "%.0f%%", snapshot.cpuLoadPercent().getAsDouble())
+                : plain("server.gui.home.cpu-unavailable");
+        return List.of(
+                tile(Material.BOOK, "server.gui.home.version", "v" + snapshot.pluginVersion(), List.of(
+                        text("server.gui.home.version-lore", snapshot.pluginVersion(), snapshot.paperVersion(),
+                                snapshot.minecraftVersion(), snapshot.javaVersion()))),
+                tile(Material.CLOCK, "server.gui.home.uptime", formatUptime(snapshot.uptime()), List.of()),
+                tile(Material.PLAYER_HEAD, "server.gui.home.players", snapshot.onlinePlayers() + " / " + snapshot.maxPlayers(), List.of()),
+                tile(Material.GRASS_BLOCK, "server.gui.home.worlds", String.valueOf(snapshot.worldCount()), List.of()),
+                tile(Material.REDSTONE, "server.gui.home.memory",
+                        formatMegabytes(snapshot.usedMemoryBytes()) + " / " + formatMegabytes(snapshot.maxMemoryBytes()) + " MB", List.of()),
+                tile(Material.COMPARATOR, "server.gui.home.cpu", cpu,
+                        List.of(text("server.gui.home.cores", snapshot.availableProcessors()))),
+                tile(Material.ENDER_CHEST, "server.gui.home.database", snapshot.databaseStatus().name(), List.of()),
+                tile(Material.BOOKSHELF, "server.gui.home.modules", String.valueOf(snapshot.enabledModules().size()),
+                        List.of(Component.text(String.join(", ", snapshot.enabledModules()), NamedTextColor.GRAY))));
     }
 
-    private void renderMaintenanceTile(GuiView view) {
+    private GuiButton tile(Material material, String labelKey, String value, List<Component> lore) {
+        Component name = Component.join(JoinConfiguration.noSeparators(), text(labelKey),
+                Component.text(": ", NamedTextColor.DARK_GRAY), Component.text(value, NamedTextColor.WHITE));
+        return GuiButton.display(GuiItem.of(material, name, lore));
+    }
+
+    /** On or off, why, and a click to manage it. */
+    private GuiButton maintenanceTile(Player viewer) {
         MaintenanceState state = ctx.maintenanceService().current();
         MaintenanceState network = ctx.maintenanceService().current(MaintenanceScope.NETWORK);
         boolean active = state.enabled() || network.enabled();
-        Material material = active ? Material.RED_WOOL : Material.LIME_WOOL;
         List<Component> lore = new ArrayList<>();
         if (network.enabled()) {
             lore.add(text("server.gui.home.maintenance-network"));
@@ -100,43 +117,36 @@ public final class ServerHomePage extends AbstractGuiPage {
         if (active && shown.reason() != null && !shown.reason().isBlank()) {
             lore.add(text("server.gui.home.maintenance-reason", shown.reason()));
         }
-        view.place(TILE_START + GuiLayout.COLUMNS,
-                GuiItem.of(material, text(active ? "server.gui.home.maintenance-on" : "server.gui.home.maintenance-off"), lore));
+        Material material = active ? Material.RED_WOOL : Material.LIME_WOOL;
+        Component name = text(active ? "server.gui.home.maintenance-on" : "server.gui.home.maintenance-off");
+        if (!viewer.hasPermission(ServerPermissions.MAINTENANCE.value())) {
+            return GuiButton.display(GuiItem.of(material, name, lore));
+        }
+        lore.add(text("gui.hint.open"));
+        return GuiButton.of(GuiItem.of(material, name, lore), clickCtx -> clickCtx.open(new ServerMaintenancePage(ctx)));
     }
 
-    private void renderNavigation(GuiView view, Player viewer) {
-        int row2 = TILE_START + GuiLayout.COLUMNS + 1;
-        view.place(row2, new GuiButton(GuiItem.of(Material.PAPER, text("server.gui.home.broadcast-message")),
-                ServerPermissions.BROADCAST, clickCtx -> promptBroadcastMessage(clickCtx.viewer())), viewer);
-        view.place(row2 + 1, new GuiButton(GuiItem.of(Material.OAK_SIGN, text("server.gui.home.broadcast-title")),
-                ServerPermissions.BROADCAST, clickCtx -> promptBroadcastTitle(clickCtx.viewer())), viewer);
-        view.place(row2 + 2, new GuiButton(GuiItem.of(Material.NAME_TAG, text("server.gui.home.broadcast-actionbar")),
-                ServerPermissions.BROADCAST, clickCtx -> promptBroadcastActionbar(clickCtx.viewer())), viewer);
-        view.place(row2 + 3, new GuiButton(GuiItem.of(Material.IRON_BARS, text("server.gui.home.maintenance-manage")),
-                ServerPermissions.MAINTENANCE, clickCtx -> clickCtx.open(new ServerMaintenancePage(ctx))), viewer);
-
-        int row3 = TILE_START + (2 * GuiLayout.COLUMNS);
-        view.place(row3, new GuiButton(GuiItem.of(Material.MAGMA_BLOCK, text("server.gui.home.shutdown")),
-                ServerPermissions.SHUTDOWN, clickCtx -> promptLifecycle(clickCtx.viewer(), true)), viewer);
-        view.place(row3 + 1, new GuiButton(GuiItem.of(Material.RESPAWN_ANCHOR, text("server.gui.home.restart")),
-                ServerPermissions.RESTART, clickCtx -> promptLifecycle(clickCtx.viewer(), false)), viewer);
-    }
-
-    private void renderPendingBanner(GuiView view, Player viewer) {
+    /** Restart and shutdown - and, while one is counting down, the button to cancel it. */
+    private List<GuiButton> lifecycleButtons(Player viewer) {
+        List<GuiButton> buttons = new ArrayList<>();
+        buttons.add(new GuiButton(GuiItem.of(Material.RESPAWN_ANCHOR, text("server.gui.home.restart")),
+                ServerPermissions.RESTART, clickCtx -> promptLifecycle(clickCtx.viewer(), false)));
+        buttons.add(new GuiButton(GuiItem.of(Material.MAGMA_BLOCK, text("server.gui.home.shutdown")),
+                ServerPermissions.SHUTDOWN, clickCtx -> promptLifecycle(clickCtx.viewer(), true)));
         ServerLifecycleService.PendingSnapshot pending = ctx.lifecycleService().pending();
-        if (pending.action() == ServerLifecycleService.PendingAction.NONE) {
-            return;
+        if (pending.action() != ServerLifecycleService.PendingAction.NONE) {
+            boolean isShutdown = pending.action() == ServerLifecycleService.PendingAction.SHUTDOWN;
+            ActionId cancelId = isShutdown ? ServerActionIds.CANCEL_SHUTDOWN : ServerActionIds.CANCEL_RESTART;
+            buttons.add(new GuiButton(GuiItem.of(Material.BARRIER,
+                    text(isShutdown ? "server.gui.home.pending-shutdown" : "server.gui.home.pending-restart", pending.remainingSeconds())),
+                    isShutdown ? ServerPermissions.SHUTDOWN : ServerPermissions.RESTART,
+                    clickCtx -> ServerGuiActions.<Void>runAction(ctx, clickCtx.viewer(), cancelId, null, () -> this.open(clickCtx.viewer()))));
         }
-        boolean isShutdown = pending.action() == ServerLifecycleService.PendingAction.SHUTDOWN;
-        ActionId cancelId = isShutdown ? ServerActionIds.CANCEL_SHUTDOWN : ServerActionIds.CANCEL_RESTART;
-        if (!viewer.hasPermission((isShutdown ? ServerPermissions.SHUTDOWN : ServerPermissions.RESTART).value())) {
-            return;
-        }
-        int row3 = TILE_START + (2 * GuiLayout.COLUMNS);
-        view.place(row3 + 3, new GuiButton(GuiItem.of(Material.BARRIER,
-                text(isShutdown ? "server.gui.home.pending-shutdown" : "server.gui.home.pending-restart", pending.remainingSeconds())),
-                null, clickCtx -> ServerGuiActions.<Void>runAction(ctx, clickCtx.viewer(), cancelId, null, () -> this.open(clickCtx.viewer()))),
-                viewer);
+        return buttons;
+    }
+
+    private String plain(String key) {
+        return PlainTextComponentSerializer.plainText().serialize(text(key));
     }
 
     /** A multi-line message - the dialog keeps line breaks, so a broadcast can span several chat lines. */

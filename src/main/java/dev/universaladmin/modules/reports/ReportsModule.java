@@ -26,6 +26,7 @@ import dev.universaladmin.modules.reports.jdbc.JdbcReportRepository;
 import dev.universaladmin.network.NetworkListener;
 import dev.universaladmin.settings.SettingsService;
 import dev.universaladmin.status.ReportOverview;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -103,6 +104,7 @@ public final class ReportsModule implements Module {
                 .target(input -> Optional.of(ActionTarget.player(input.targetId(), input.targetName())))
                 .forbidSelfTarget()
                 .validator(reasonValidator(settings))
+                .auditArgs(input -> List.of(input.targetName(), input.reason()))
                 .auditSummary(input -> "Reported " + input.targetName() + ": " + input.reason())
                 .auditDetails((input, result) -> result instanceof ActionResult.Success<?> success
                         && success.value() instanceof Report report
@@ -115,6 +117,7 @@ public final class ReportsModule implements Module {
                     .permission(ReportsPermissions.MANAGE)
                     .module(module)
                     .target(input -> Optional.of(ActionTarget.of("report", String.valueOf(input.reportId()), "#" + input.reportId())))
+                    .auditArgs(input -> List.of(input.note() == null || input.note().isBlank() ? "-" : input.note()))
                     .auditSummary(input -> kind.name().charAt(0) + kind.name().substring(1).toLowerCase(java.util.Locale.ROOT)
                             + " report #" + input.reportId() + (input.note() == null || input.note().isBlank() ? "" : ": " + input.note()))
                     .auditDetails((input, result) -> AuditDetails.builder().correlationId("report#" + input.reportId()).build())

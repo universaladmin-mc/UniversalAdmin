@@ -30,6 +30,7 @@ import dev.universaladmin.modules.whitelist.jdbc.JdbcWhitelistStateRepository;
 import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.network.ScopeKeys;
 import dev.universaladmin.scheduler.TaskScheduler;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -160,6 +161,7 @@ public final class WhitelistModule implements Module {
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.player(in.playerId(), in.playerName())))
                 .validator(temporaryRequiresPermission())
+                .auditArgs(in -> List.of(in.playerName()))
                 .auditSummary(in -> "Whitelisted " + in.playerName() + (in.expiresAt() != null ? " until " + in.expiresAt() : ""))
                 .auditDetails((in, result) -> AuditDetails.builder()
                         .reason(in.reason())
@@ -171,6 +173,7 @@ public final class WhitelistModule implements Module {
                 .permission(WhitelistPermissions.REMOVE)
                 .module(module)
                 .target(playerId -> Optional.of(ActionTarget.player(playerId, PlayerNames.of(playerId))))
+                .auditArgs(playerId -> List.of(PlayerNames.of(playerId)))
                 .auditSummary(playerId -> "Removed " + PlayerNames.of(playerId) + " from the whitelist")
                 .build());
 
@@ -191,6 +194,7 @@ public final class WhitelistModule implements Module {
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.player(in.playerId(), in.playerName())))
                 .validator(both(networkAllowed(network), temporaryRequiresPermission()))
+                .auditArgs(in -> List.of(in.playerName()))
                 .auditSummary(in -> "Added " + in.playerName() + " to the network whitelist"
                         + (in.expiresAt() != null ? " until " + in.expiresAt() : ""))
                 .auditDetails((in, result) -> AuditDetails.builder()
@@ -203,6 +207,7 @@ public final class WhitelistModule implements Module {
                 .module(module)
                 .validator(networkAllowed(network))
                 .target(playerId -> Optional.of(ActionTarget.player(playerId, PlayerNames.of(playerId))))
+                .auditArgs(playerId -> List.of(PlayerNames.of(playerId)))
                 .auditSummary(playerId -> "Removed " + PlayerNames.of(playerId) + " from the network whitelist")
                 .build());
     }

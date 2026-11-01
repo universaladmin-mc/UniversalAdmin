@@ -67,6 +67,19 @@ files written into a `@TempDir`, not against a mocked message map - see
 here, because this test isn't checking the settings system, only the
 locale fallback logic.
 
+## Binary Compatibility: Every Supported Paper Version
+
+The jar is compiled against one Paper API but runs on every version from
+1.21.7 to the newest. Compiling against the others (the CI does) is not
+enough: a method whose signature differs - e.g. between Adventure 4 on Paper
+1.21 and Adventure 5 on Paper 26 - compiles and fails with
+`NoSuchMethodError` only on the other version. `./gradlew binaryCompatibility`
+(part of `check`, so of every `build`) resolves every class, method and field
+the plugin's own classes use in the server's API against Paper 1.21.7,
+1.21.11 and the version compiled against
+(`gradle/binary-check/BinCheck.java`, Java 25). The CI runs it once more
+with the jar built against the newest Paper version.
+
 ## What's Still Missing
 
 - Tests for the eight module skeletons follow once they get real logic

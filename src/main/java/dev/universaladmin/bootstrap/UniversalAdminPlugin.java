@@ -21,6 +21,7 @@ import dev.universaladmin.command.builtin.ReloadCommand;
 import dev.universaladmin.command.builtin.StatusCommand;
 import dev.universaladmin.command.builtin.UpdateCommand;
 import dev.universaladmin.command.paper.ShortcutCommands;
+import dev.universaladmin.config.ConfigCompletion;
 import dev.universaladmin.config.ConfigMigrationRunner;
 import dev.universaladmin.core.ServiceRegistry;
 import dev.universaladmin.core.UniversalAdmin;
@@ -29,10 +30,12 @@ import dev.universaladmin.gui.GuiFramework;
 import dev.universaladmin.gui.GuiListener;
 import dev.universaladmin.gui.GuiRegistry;
 import dev.universaladmin.gui.GuiSessionManager;
+import dev.universaladmin.gui.LiveRefresh;
 import dev.universaladmin.gui.MainMenuPage;
 import dev.universaladmin.gui.MaterialIconProvider;
 import dev.universaladmin.gui.ModuleGuiStyle;
 import dev.universaladmin.gui.PlayerMenuRegistry;
+import dev.universaladmin.gui.StaffWelcome;
 import dev.universaladmin.gui.StatusLine;
 import dev.universaladmin.gui.StatusToggleRegistry;
 import dev.universaladmin.localization.LanguageFiles;
@@ -85,13 +88,18 @@ import dev.universaladmin.update.UpdateDownloader;
 import dev.universaladmin.update.UpdateJoinListener;
 import dev.universaladmin.update.UpdateTarget;
 import dev.universaladmin.update.UpdateTargets;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.random.RandomGenerator;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -220,6 +228,8 @@ public final class UniversalAdminPlugin extends JavaPlugin {
 
         getServer().getScheduler().runTaskTimer(this,
                 new StatusLine(getServer(), platform.statusToggles(), platform.settings(), getLogger()), 20L, 20L);
+        getServer().getScheduler().runTaskTimer(this, new LiveRefresh(getServer(), getLogger()), 20L, 20L);
+        getServer().getPluginManager().registerEvents(new StaffWelcome(this, platform.messages(), platform.settings()), this);
         startTelemetry(platform);
         startUpdateChecks(platform);
         logStartupSummary(platform);
@@ -259,6 +269,19 @@ public final class UniversalAdminPlugin extends JavaPlugin {
      * can function without it, so a failure here is a whole-plugin failure,
      * not something to isolate per-module. See docs/architecture/modules.md.
      */
+    /** The config.yml inside the jar, comments included - what {@link ConfigCompletion} adds from. */
+    private YamlConfiguration bundledConfig() {
+        YamlConfiguration bundled = new YamlConfiguration();
+        try (InputStream in = getResource("config.yml")) {
+            if (in != null) {
+                bundled.loadFromString(new String(in.readAllBytes(), StandardCharsets.UTF_8));
+            }
+        } catch (IOException | InvalidConfigurationException e) {
+            getLogger().log(Level.WARNING, "Could not read the bundled config.yml - no new options added", e);
+        }
+        return bundled;
+    }
+
     private UniversalAdmin bootstrapCore(Instant startedAt) {
         saveDefaultConfig();
         // lang/<locale>.yml holds only the server owner's own texts; an old
@@ -271,7 +294,14 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         // /admin reload - see ReloadConfigAction.
         ConfigMigrationRunner migrationRunner = ConfigMigrationRunner.withBuiltInMigrations(getLogger());
         reloadConfig();
-        if (migrationRunner.run(getConfig())) {
+        boolean changed = migrationRunner.run(getConfig());
+        // Options added in this version are written into an existing file with
+        // their explanation, so they can be found next to the others.
+        List<String> added = ConfigCompletion.complete(getConfig(), bundledConfig());
+        if (!added.isEmpty()) {
+            getLogger().info(() -> "Added " + added.size() + " new option(s) to config.yml: " + String.join(", ", added));
+        }
+        if (changed || !added.isEmpty()) {
             saveConfig();
         }
 

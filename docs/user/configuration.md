@@ -17,6 +17,11 @@ warning and falls back to its default.
 every setting of every module with a comment; the module docs describe
 their own settings in detail.
 
+**New options reach your config.yml.** When an update brings a new option,
+UniversalAdmin writes it into your existing `config.yml` on the next start,
+with its default value and its explanation, so you find it next to the
+others - the console lists what was added. Nothing you set is changed; the
+file is formatted anew when that happens (your values and comments stay).
 ## `general`
 
 | Key | Type | Default | Notes |

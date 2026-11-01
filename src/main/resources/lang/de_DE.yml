@@ -13,6 +13,13 @@ plugin:
     database: "<white>Datenbank:</white> <aqua>{0}</aqua>"
 
 players:
+  audit:
+    teleport:
+      admin-to-player: "zum Spieler teleportiert"
+      bring-to-admin: "Spieler geholt"
+      player-to-player: "Spieler zu einem anderen teleportiert"
+      world-spawn: "Spieler zum Welt-Spawn teleportiert"
+      bed-respawn: "Spieler zu seinem Bett teleportiert"
   not-found: "Kein Profil bekannt für {0}."
   action:
     offline: "<red>Dieser Spieler ist nicht mehr online."
@@ -549,6 +556,12 @@ server:
       error: "<red>Beim Ausführen dieser Aktion ist etwas schiefgelaufen."
     home:
       title: "<gold><bold>Server"
+      row:
+        status: "<aqua><bold>Status"
+        broadcast: "<green><bold>Mitteilen"
+        maintenance: "<gold><bold>Wartung"
+        lifecycle: "<red><bold>Neustart & Stopp"
+      cores: "<gray>{0} Kerne"
       version: "<gray>Version"
       version-lore: "<white>v{0} | {1} | MC {2} | Java {3}"
       uptime: "<gray>Laufzeit"
@@ -624,6 +637,17 @@ worlds:
     invalid-gamerule-value: "<red><white>{0}</white> ist kein gültiger Wert für <white>{1}</white>."
     gamerule-name-required: "<red>Ein Gamerule-Name ist erforderlich."
   gui:
+    row:
+      world: "<aqua><bold>Welt"
+      settings: "<green><bold>Einstellen"
+      go: "<blue><bold>Hingehen"
+    hint:
+      change: "<dark_gray>Klicken zum Ändern"
+    environment:
+      normal: "Oberwelt"
+      nether: "Nether"
+      the_end: "Das Ende"
+      custom: "Eigene"
     not-found: "<red>Diese Welt ist nicht mehr geladen."
     action:
       success: "<green>Erledigt."
@@ -642,6 +666,7 @@ worlds:
       time: "Zeit: {0}"
       weather: "Wetter: {0}"
     field:
+      ticks: "<gray>{0} Ticks"
       environment: "Umgebung"
       seed: "Seed"
       spawn: "Spawn"
@@ -771,6 +796,8 @@ whitelist:
     network-removed: "<gray><white>{0}</white> von der Netzwerk-Whitelist entfernt."
 
 performance:
+  audit:
+    all-worlds: "allen Welten"
   action:
     no-clearable-types: "<red>Jeder ausgewählte Typ ist geschützt oder Spielern vorbehalten - nichts zu entfernen."
     no-types-selected: "<red>Wähle mindestens einen Entity-Typ aus."
@@ -784,6 +811,17 @@ performance:
       success: "<green>Erledigt."
       error: "<red>Bei der Ausführung ist etwas schiefgelaufen."
     home:
+      row:
+        now: "<aqua><bold>Gerade"
+        health: "<aqua><bold>Zustand"
+        details: "<blue><bold>Genauer"
+      light:
+        good: "<green>gut"
+        close: "<yellow>knapp an der Grenze"
+        bad: "<red>über der Grenze"
+        limit: "<gray>Das Team wird gewarnt bei {0} (performance.alerts)"
+      tps-hint: "<dark_gray>Ticks pro Sekunde - 20 ist volle Geschwindigkeit"
+      mspt-hint: "<dark_gray>Millisekunden pro Tick - bis 50 bleiben es 20 TPS"
       title: "<gold><bold>Performance"
       tps: "<gray>TPS"
       tps-history-avg: "<gray>Ø 5min: <white>{0}"
@@ -825,7 +863,323 @@ performance:
     all-worlds: "allen Welten"
 
 audit:
+  entry:
+    core:
+      chat-clear:
+        title: "Chat geleert"
+        text: "{0} hat den Chat geleert"
+      chat-lock:
+        title: "Chat gesperrt"
+        text: "{0} hat den Chat gesperrt"
+      chat-slowmode:
+        title: "Langsamer Modus"
+        text: "{0} hat den langsamen Modus auf {2} gestellt (0s ist aus)"
+      chat-staff-message:
+        title: "Staff-Chat"
+        text: "{0} hat in den Staff-Chat geschrieben"
+      chat-staff-toggle:
+        title: "Staff-Chat umgeschaltet"
+        text: "{0} hat den Staff-Chat umgeschaltet"
+      chat-unlock:
+        title: "Chat entsperrt"
+        text: "{0} hat den Chat entsperrt"
+      config-reload:
+        title: "Neu geladen"
+        text: "{0} hat die Konfiguration neu geladen"
+      moderation-alts-forget:
+        title: "Adressen gelöscht"
+        text: "{0} hat die gespeicherten Adressen von {2} gelöscht"
+      moderation-alts-view:
+        title: "Zweitaccounts angesehen"
+        text: "{0} hat mögliche Zweitaccounts von {2} angesehen"
+      moderation-ban:
+        title: "Bann"
+        text: "{0} hat {2} gebannt: {3}"
+      moderation-freeze:
+        title: "Eingefroren"
+        text: "{0} hat {2} eingefroren: {3}"
+      moderation-freeze-disconnect-notice:
+        title: "Eingefroren gegangen"
+        text: "{2} hat den Server eingefroren verlassen"
+      moderation-godmode:
+        title: "Godmode"
+        text: "{0} hat Godmode umgeschaltet"
+      moderation-import:
+        title: "Import"
+        text: "{0} hat Strafen aus {2} importiert"
+      moderation-ipban:
+        title: "IP-Bann"
+        text: "{0} hat {2} per IP gebannt: {3}"
+      moderation-kick:
+        title: "Kick"
+        text: "{0} hat {2} gekickt: {3}"
+      moderation-mute:
+        title: "Mute"
+        text: "{0} hat {2} stummgeschaltet: {3}"
+      moderation-no-collision:
+        title: "Keine Kollision"
+        text: "{0} hat die Kollision umgeschaltet"
+      moderation-notes-add:
+        title: "Notiz geschrieben"
+        text: "{0} hat eine Notiz zu {2} geschrieben: {3}"
+      moderation-notes-remove:
+        title: "Notiz entfernt"
+        text: "{0} hat Notiz #{2} entfernt"
+      moderation-punish:
+        title: "Mit Vorlage bestraft"
+        text: "{0} hat {1} mit einer Vorlage bestraft"
+      moderation-removewarn:
+        title: "Verwarnung entfernt"
+        text: "{0} hat Verwarnung #{3} von {2} entfernt"
+      moderation-staffmode-enter:
+        title: "Staff-Modus an"
+        text: "{0} hat den Staff-Modus betreten"
+      moderation-staffmode-exit:
+        title: "Staff-Modus aus"
+        text: "{0} hat den Staff-Modus verlassen"
+      moderation-staffmode-recover:
+        title: "Staff-Modus wiederhergestellt"
+        text: "Das Inventar von {2} wurde nach einem nicht sauber beendeten Staff-Modus wiederhergestellt"
+      moderation-tempban:
+        title: "Temp-Bann"
+        text: "{0} hat {2} für {4} gebannt: {3}"
+      moderation-tempmute:
+        title: "Temp-Mute"
+        text: "{0} hat {2} für {4} stummgeschaltet: {3}"
+      moderation-unban:
+        title: "Entbannt"
+        text: "{0} hat {2} entbannt"
+      moderation-unfreeze:
+        title: "Aufgetaut"
+        text: "{0} hat {2} aufgetaut"
+      moderation-unmute:
+        title: "Mute aufgehoben"
+        text: "{0} hat den Mute von {2} aufgehoben"
+      moderation-vanish:
+        title: "Vanish"
+        text: "{0} hat Vanish umgeschaltet"
+      moderation-warn:
+        title: "Verwarnung"
+        text: "{0} hat {2} verwarnt: {3}"
+      network-alert:
+        title: "Netzwerk-Meldung"
+        text: "{0} hat eine Meldung ans Netzwerk geschickt: {2}"
+      network-bring:
+        title: "Geholt"
+        text: "{0} hat {2} nach {3} geholt"
+      network-connect:
+        title: "Verbunden"
+        text: "{0} hat sich mit {2} verbunden"
+      network-goto:
+        title: "Server gewechselt"
+        text: "{0} ist zu {2} gewechselt"
+      network-send:
+        title: "Geschickt"
+        text: "{0} hat {2} nach {3} geschickt"
+      nick-clear:
+        title: "Nick entfernt"
+        text: "{0} hat den Nick von {2} entfernt"
+      nick-set:
+        title: "Nick"
+        text: "{0} hat den Nick {2} genommen"
+      performance-clear-entities:
+        title: "Entities entfernt"
+        text: "{0} hat Entities ({2}) in {3} entfernt"
+      players-collision-toggle:
+        title: "Kollision"
+        text: "{0} hat die Kollision von {1} umgeschaltet"
+      players-effects-add:
+        title: "Effekt gegeben"
+        text: "{0} hat {1} {2} {3} gegeben"
+      players-effects-clear:
+        title: "Effekte entfernt"
+        text: "{0} hat alle Effekte von {1} entfernt"
+      players-effects-remove:
+        title: "Effekt entfernt"
+        text: "{0} hat {1} den Effekt {2} genommen"
+      players-enderchest-edit:
+        title: "Endertruhe bearbeitet"
+        text: "{0} hat die Endertruhe von {2} bearbeitet ({3} Plätze)"
+      players-extinguish:
+        title: "Gelöscht"
+        text: "{0} hat das Feuer an {1} gelöscht"
+      players-feed:
+        title: "Gesättigt"
+        text: "{0} hat {1} gesättigt"
+      players-fly-speed:
+        title: "Fluggeschwindigkeit"
+        text: "{0} hat die Fluggeschwindigkeit von {1} auf {2} gesetzt"
+      players-fly-toggle:
+        title: "Fliegen"
+        text: "{0} hat das Fliegen für {1} umgeschaltet"
+      players-gamemode:
+        title: "Spielmodus"
+        text: "{0} hat den Spielmodus von {1} auf {2} gesetzt"
+      players-get-ip-address:
+        title: "IP-Adresse angesehen"
+        text: "{0} hat die IP-Adresse von {2} angesehen"
+      players-get-profile:
+        title: "Profil angesehen"
+        text: "{0} hat das Profil von {1} angesehen"
+      players-glow-toggle:
+        title: "Leuchten"
+        text: "{0} hat das Leuchten von {1} umgeschaltet"
+      players-gravity-toggle:
+        title: "Schwerkraft"
+        text: "{0} hat die Schwerkraft von {1} umgeschaltet"
+      players-heal:
+        title: "Geheilt"
+        text: "{0} hat {1} geheilt"
+      players-inventory-clear:
+        title: "Inventar geleert"
+        text: "{0} hat das Inventar von {2} geleert"
+      players-inventory-edit:
+        title: "Inventar bearbeitet"
+        text: "{0} hat das Inventar von {2} bearbeitet ({3} Plätze)"
+      players-set-food:
+        title: "Hunger"
+        text: "{0} hat den Hunger von {1} auf {2} gesetzt"
+      players-set-health:
+        title: "Gesundheit"
+        text: "{0} hat die Gesundheit von {1} auf {2} gesetzt"
+      players-set-level:
+        title: "Level"
+        text: "{0} hat das Level von {1} auf {2} gesetzt"
+      players-set-xp:
+        title: "XP"
+        text: "{0} hat den XP-Fortschritt von {1} auf {2} gesetzt"
+      players-teleport:
+        title: "Teleport"
+        text: "{0}: {2} ({3})"
+      players-walk-speed:
+        title: "Laufgeschwindigkeit"
+        text: "{0} hat die Laufgeschwindigkeit von {1} auf {2} gesetzt"
+      reports-claim:
+        title: "Meldung übernommen"
+        text: "{0} hat Meldung {1} übernommen: {2}"
+      reports-create:
+        title: "Meldung"
+        text: "{0} hat {2} gemeldet: {3}"
+      reports-reject:
+        title: "Meldung abgelehnt"
+        text: "{0} hat Meldung {1} abgelehnt: {2}"
+      reports-resolve:
+        title: "Meldung erledigt"
+        text: "{0} hat Meldung {1} erledigt: {2}"
+      reports-teleport:
+        title: "Zur Meldung"
+        text: "{0} hat sich zur Meldung {1} teleportiert"
+      server-broadcast-actionbar:
+        title: "Actionbar an alle"
+        text: "{0} hat allen in der Actionbar gezeigt: {2}"
+      server-broadcast-message:
+        title: "Nachricht an alle"
+        text: "{0} hat allen eine Nachricht geschickt: {2}"
+      server-broadcast-title:
+        title: "Titel an alle"
+        text: "{0} hat allen einen Titel gezeigt: {2}"
+      server-maintenance-allowed-players:
+        title: "Wartungsliste"
+        text: "{0} hat geändert, wer während der Wartung joinen darf ({2} Spieler)"
+      server-maintenance-disable:
+        title: "Wartung aus"
+        text: "{0} hat die Wartung ausgeschaltet"
+      server-maintenance-enable:
+        title: "Wartung an"
+        text: "{0} hat die Wartung eingeschaltet: {2}"
+      server-maintenance-network-allowed-players:
+        title: "Netzwerk-Wartungsliste"
+        text: "{0} hat geändert, wer während der Netzwerk-Wartung joinen darf ({2} Spieler)"
+      server-maintenance-network-disable:
+        title: "Netzwerk-Wartung aus"
+        text: "{0} hat die Netzwerk-Wartung ausgeschaltet"
+      server-maintenance-network-enable:
+        title: "Netzwerk-Wartung an"
+        text: "{0} hat die Netzwerk-Wartung eingeschaltet: {2}"
+      server-restart:
+        title: "Neustart"
+        text: "{0} hat den Server neu gestartet: {2}"
+      server-restart-cancel:
+        title: "Neustart abgebrochen"
+        text: "{0} hat den Neustart abgebrochen"
+      server-shutdown:
+        title: "Shutdown"
+        text: "{0} hat den Server gestoppt: {2}"
+      server-shutdown-cancel:
+        title: "Shutdown abgebrochen"
+        text: "{0} hat den Shutdown abgebrochen"
+      settings-set:
+        title: "Einstellung geändert"
+        text: "{0} hat die Einstellung {2} geändert"
+      update-apply:
+        title: "Update"
+        text: "{0} hat ein Update eingespielt"
+      whitelist-add:
+        title: "Auf die Whitelist"
+        text: "{0} hat {2} auf die Whitelist gesetzt"
+      whitelist-disable:
+        title: "Whitelist aus"
+        text: "{0} hat die Whitelist ausgeschaltet"
+      whitelist-enable:
+        title: "Whitelist an"
+        text: "{0} hat die Whitelist eingeschaltet"
+      whitelist-network-add:
+        title: "Auf die Netzwerk-Whitelist"
+        text: "{0} hat {2} auf die Netzwerk-Whitelist gesetzt"
+      whitelist-network-disable:
+        title: "Netzwerk-Whitelist aus"
+        text: "{0} hat die Netzwerk-Whitelist ausgeschaltet"
+      whitelist-network-enable:
+        title: "Netzwerk-Whitelist an"
+        text: "{0} hat die Netzwerk-Whitelist eingeschaltet"
+      whitelist-network-remove:
+        title: "Von der Netzwerk-Whitelist"
+        text: "{0} hat {2} von der Netzwerk-Whitelist genommen"
+      whitelist-remove:
+        title: "Von der Whitelist"
+        text: "{0} hat {2} von der Whitelist genommen"
+      worlds-border-center:
+        title: "Grenzmitte"
+        text: "{0} hat die Weltgrenze von {2} nach {3}, {4} verschoben"
+      worlds-border-damage:
+        title: "Grenzschaden"
+        text: "{0} hat den Grenzschaden von {2} geändert"
+      worlds-border-size:
+        title: "Grenzgröße"
+        text: "{0} hat die Weltgrenze von {2} auf {3} Blöcke gesetzt"
+      worlds-border-warning:
+        title: "Grenzwarnung"
+        text: "{0} hat die Grenzwarnung von {2} geändert"
+      worlds-difficulty-set:
+        title: "Schwierigkeit"
+        text: "{0} hat die Schwierigkeit von {2} auf {3} gestellt"
+      worlds-gamerule-set:
+        title: "Gamerule"
+        text: "{0} hat {3} in {2} auf {4} gesetzt"
+      worlds-spawn-set:
+        title: "Spawn gesetzt"
+        text: "{0} hat den Spawn von {2} gesetzt"
+      worlds-teleport-to-spawn:
+        title: "Zum Spawn"
+        text: "{0} hat sich zum Spawn von {2} teleportiert"
+      worlds-time-set:
+        title: "Zeit"
+        text: "{0} hat die Zeit in {2} auf {3} gestellt"
+      worlds-weather-set:
+        title: "Wetter"
+        text: "{0} hat das Wetter in {2} auf {3} gestellt"
   gui:
+    row:
+      entry: "<aqua><bold>Eintrag"
+      details: "<aqua><bold>Genauer"
+    when: "<dark_gray>{0} · {1}"
+    source:
+      gui: "Menü"
+      command: "Befehl"
+      web: "Web"
+      api: "API"
+      extension: "Erweiterung"
+      system: "automatisch"
     title: "<gold>Audit-Log"
     detail-title: "<gold>Audit-Eintrag"
     filter:
@@ -869,6 +1223,9 @@ audit:
       failure: "<red>Fehlschlag"
 
 gui:
+  welcome:
+    menu: "<gold>UniversalAdmin</gold> <gray>- <click:run_command:'/admin'><hover:show_text:'<gray>Menü öffnen'><white><u>/admin</u></white></hover></click> öffnet das Menü: Spieler, Moderation, Server, Welten, Einstellungen und dein eigener Status."
+    language: "<gray>Dein Spiel ist auf Deutsch. <click:run_command:''/admin settings set general.language {0}''><hover:show_text:''<gray>general.language: {0}''><green>[UniversalAdmin auf Deutsch umstellen]</green></hover></click>"
   hint:
     open: "<dark_gray>Klicken zum Öffnen"
   home: "<gold>Hauptmenü"
@@ -1702,6 +2059,8 @@ reports:
   teleported-remote: "<gray>Du wirst für Meldung <white>#{0}</white> über <white>{1}</white> zu <aqua>{2}</aqua> geschickt..."
 
 nick:
+  audit:
+    random: "(zufällig)"
   toggle:
     nicked: "Nick {0}"
     plain: "Nick"

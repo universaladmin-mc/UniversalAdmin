@@ -66,7 +66,7 @@ public final class TeleportPlayerAction implements Action<TeleportInput, Void> {
             case WORLD_SPAWN -> teleport(target, target.getWorld().getSpawnLocation(), future,
                     "players.result.teleport.spawn", target.getName());
             case BED_RESPAWN -> {
-                Location respawn = target.getBedSpawnLocation();
+                Location respawn = target.getRespawnLocation();
                 if (respawn == null) {
                     future.complete(ActionResult.failure(
                             ActionResult.FailureReason.VALIDATION, MessageKey.of("players.action.no-respawn-location")));

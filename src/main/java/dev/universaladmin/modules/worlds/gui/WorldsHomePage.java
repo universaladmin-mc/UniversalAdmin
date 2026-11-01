@@ -7,12 +7,15 @@ import dev.universaladmin.gui.GuiLayout;
 import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.gui.GuiView;
+import dev.universaladmin.localization.GameNames;
+import dev.universaladmin.localization.MessageKey;
+import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.modules.worlds.WorldSummary;
 import java.util.List;
+import java.util.Locale;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
@@ -40,6 +43,12 @@ public final class WorldsHomePage extends AbstractGuiPage {
         return text("worlds.gui.home.title");
     }
 
+    /** Players, chunks and the time change while you look. */
+    @Override
+    public boolean live() {
+        return true;
+    }
+
     @Override
     protected void renderContent(GuiRenderContext context) {
         GuiView view = context.view();
@@ -62,22 +71,15 @@ public final class WorldsHomePage extends AbstractGuiPage {
     private GuiItem worldTile(World world) {
         WorldSummary summary = ctx.infoService().summary(world);
         List<Component> lore = List.of(
-                text("worlds.gui.home.environment", summary.environment().name()),
+                text("worlds.gui.home.environment", MessageService.markup(messages.get(
+                        MessageKey.of("worlds.gui.environment." + summary.environment().name().toLowerCase(Locale.ROOT))))),
                 text("worlds.gui.home.players", summary.players()),
                 text("worlds.gui.home.chunks", summary.loadedChunks()),
                 text("worlds.gui.home.entities", summary.entities()),
-                text("worlds.gui.home.difficulty", summary.difficulty().name()),
-                text("worlds.gui.home.time", summary.time()),
-                text("worlds.gui.home.weather", WorldsGuiFormat.weatherLabel(messages, summary.storm(), summary.thundering())));
-        return GuiItem.of(material(world.getEnvironment()), Component.text(summary.name(), NamedTextColor.GOLD), lore);
-    }
-
-    private Material material(World.Environment environment) {
-        return switch (environment) {
-            case NORMAL -> Material.GRASS_BLOCK;
-            case NETHER -> Material.NETHERRACK;
-            case THE_END -> Material.END_STONE;
-            default -> Material.PAPER;
-        };
+                text("worlds.gui.home.difficulty", GameNames.arg(GameNames.difficulty(summary.difficulty()))),
+                text("worlds.gui.home.time", GameNames.clock(summary.time())),
+                text("worlds.gui.home.weather", WorldsGuiFormat.weatherLabel(messages, summary.storm(), summary.thundering())),
+                text("gui.hint.open"));
+        return GuiItem.of(WorldsGuiFormat.material(world.getEnvironment()), Component.text(summary.name(), NamedTextColor.GOLD), lore);
     }
 }

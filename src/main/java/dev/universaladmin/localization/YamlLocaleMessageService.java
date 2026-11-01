@@ -86,7 +86,16 @@ public final class YamlLocaleMessageService implements MessageService {
 
     @Override
     public String get(MessageKey key, Object... args) {
-        String template = resolveTemplate(key);
+        return format(key, resolveTemplate(key), args);
+    }
+
+    @Override
+    public String get(String locale, MessageKey key, Object... args) {
+        String template = lookup(locale, key.value());
+        return template == null ? get(key, args) : format(key, template, args);
+    }
+
+    private String format(MessageKey key, String template, Object... args) {
         if (args.length == 0) {
             return template;
         }

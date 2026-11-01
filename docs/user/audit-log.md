@@ -74,6 +74,13 @@ Open via `/admin` → **Audit Log** (needs `universaladmin.audit.view`):
   page) to see Actor/Action/Target/Time/Source/Result/Reason/Old-New/
   Metadata laid out in full.
 
+Entries read in the server's language: a short title ("Ban") and a
+sentence ("Admin banned Notch for 7d: Griefing") from the language files
+(`audit.entry.*`, see [ADR 0028](../architecture/decisions/0028-audit-log-in-the-servers-language.md)).
+The English summary each entry was saved with stays in the database for the
+console, Discord and exports; an entry from before 1.9 shows it where its
+sentence would need a value that was not stored then.
+
 The list loads the most recent 200 entries matching the current filter and
 paginates over that batch in memory - the same "load once, slice
 client-side" shape every list page in this GUI framework uses (see

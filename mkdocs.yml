@@ -131,6 +131,7 @@ nav:
           - architecture/decisions/0025-nick-system.md
           - architecture/decisions/0026-language-files-hold-only-overrides.md
           - architecture/decisions/0027-menu-design-system.md
+          - architecture/decisions/0028-audit-log-in-the-servers-language.md
   - Releases:
       - release/releasing.md
       - release/licensing.md

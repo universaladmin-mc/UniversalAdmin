@@ -10,6 +10,7 @@ import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.gui.GuiTextInput;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.gui.SelectionDialog;
+import dev.universaladmin.localization.GameNames;
 import dev.universaladmin.modules.players.PlayerPermissions;
 import dev.universaladmin.modules.players.action.AddEffectInput;
 import dev.universaladmin.modules.players.action.PlayerActionIds;
@@ -18,6 +19,7 @@ import dev.universaladmin.modules.players.action.RemoveEffectInput;
 import java.util.List;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Registry;
@@ -71,7 +73,8 @@ public final class PlayerEffectsPage extends AbstractGuiPage {
                     break;
                 }
                 view.place(slot++, GuiItem.of(Material.POTION,
-                        Component.text(effect.getType().getName() + " " + (effect.getAmplifier() + 1)),
+                        Component.join(JoinConfiguration.noSeparators(), GameNames.effect(effect.getType()),
+                                Component.text(" " + (effect.getAmplifier() + 1))),
                         List.of(Component.text((effect.getDuration() / 20) + "s"))));
             }
         }
@@ -87,10 +90,10 @@ public final class PlayerEffectsPage extends AbstractGuiPage {
 
     private void promptAddEffect(Player viewer) {
         List<PotionEffectType> types = Registry.EFFECT.stream()
-                .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
+                .sorted((a, b) -> a.getKey().getKey().compareTo(b.getKey().getKey()))
                 .toList();
         SelectionDialog.open(viewer, framework, messages, ctx.scheduler(), text("players.gui.effects.add"), types,
-                type -> GuiItem.of(Material.POTION, Component.text(type.getName())),
+                type -> GuiItem.of(Material.POTION, GameNames.effect(type)),
                 (clickCtx, type) -> promptEffectDetails(viewer, type));
     }
 
@@ -135,7 +138,7 @@ public final class PlayerEffectsPage extends AbstractGuiPage {
             return;
         }
         SelectionDialog.open(viewer, framework, messages, ctx.scheduler(), text("players.gui.effects.remove"), effects,
-                effect -> GuiItem.of(Material.POTION, Component.text(effect.getType().getName())),
+                effect -> GuiItem.of(Material.POTION, GameNames.effect(effect.getType())),
                 (clickCtx, effect) -> runAction(viewer, PlayerActionIds.EFFECTS_REMOVE, new RemoveEffectInput(targetId, effect.getType())));
     }
 
