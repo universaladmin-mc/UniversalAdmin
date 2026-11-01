@@ -178,13 +178,22 @@ public final class TicketsModule implements Module {
   status line (`ModuleContext#registerStatusToggle`), and the row of the
   player's profile your button goes in (`PlayerMenuEntry#group()`); see
   [gui-framework.md](../development/gui-framework.md#added-in-18).
+- Hub pages and the audit log (1.8): `GuiRows` and `GuiButton#display` for
+  rows behind coloured label panes, `GuiPage#live()` for a page that shows
+  live values, `ActionDefinition.Builder#auditArgs` plus
+  `audit.entry.<namespace>.<action>.title`/`.text` texts for audit entries in
+  the server's language, `Migration#namespace()` to number your own
+  migrations from 1, `MessageService#get(locale, ...)` for a message in one
+  player's language.
 - `UniversalAdminProvider.API_VERSION` - check before relying on API added
   in a later minor version (`network()`, `PlayerDirectory` and
   `withPlayer` are 1.1; the status services and
   `PlayerDirectory#addIfAbsent` are 1.2; `NetworkService#vanished` is 1.3;
   mute kinds, `VoiceChat` and `GuiForm` are 1.4 - UniversalAdmin 1.5;
   `updatesFrom` is 1.5 - UniversalAdmin 1.6; `Nicks` and `PlayerNames` are
-  1.6 - UniversalAdmin 1.7; the menu additions are 1.7 - UniversalAdmin 1.8).
+  1.6 - UniversalAdmin 1.7; the menu additions are 1.7 - UniversalAdmin 1.8;
+  hub rows, live pages, audit values and migration namespaces are 1.8 -
+  UniversalAdmin 1.9).
 
 ## Reference
 

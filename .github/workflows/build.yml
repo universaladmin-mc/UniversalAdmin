@@ -141,3 +141,11 @@ jobs:
           ./gradlew compileJava compileTestJava --console=plain
           -PpaperApiVersion=${{ steps.api.outputs.version }}
           -Porg.gradle.java.installations.fromEnv=JAVA_HOME_25_X64
+
+      # The jar built against this version, checked against the oldest and
+      # newest Paper API - see binaryCompatibility in build.gradle.kts.
+      - name: Binary compatibility
+        run: >-
+          ./gradlew binaryCompatibility --console=plain
+          -PpaperApiVersion=${{ steps.api.outputs.version }}
+          -Porg.gradle.java.installations.fromEnv=JAVA_HOME_25_X64

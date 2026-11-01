@@ -24,4 +24,16 @@ public interface GuiPage {
     GuiPageId id();
 
     void open(Player viewer);
+
+    /**
+     * Whether the page shows values that change on their own - TPS, memory,
+     * players. Such a page is drawn again once a second for as long as it is
+     * open, in place (see {@link AbstractGuiPage#open}); it should therefore
+     * draw its content right away, not after loading it.
+     *
+     * @since 1.8
+     */
+    default boolean live() {
+        return false;
+    }
 }

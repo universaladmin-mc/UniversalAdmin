@@ -20,6 +20,7 @@ import dev.universaladmin.scheduler.TaskScheduler;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -137,11 +138,14 @@ public final class AuditLogListPage extends AbstractGuiPage {
 
     private GuiItem renderEntry(AuditEvent event) {
         Material material = event.success() ? Material.LIME_DYE : Material.RED_DYE;
-        Component name = Component.text(event.type().toString(), event.success() ? NamedTextColor.GREEN : NamedTextColor.RED);
-        List<Component> lore = List.of(
-                Component.text(TIME_FORMAT.format(event.timestamp()) + "  " + event.source(), NamedTextColor.GRAY),
-                Component.text(event.actor().displayName(), NamedTextColor.YELLOW),
-                Component.text(event.summary(), NamedTextColor.WHITE));
+        Component name = AuditTexts.title(messages, event).colorIfAbsent(event.success() ? NamedTextColor.WHITE : NamedTextColor.RED);
+        List<Component> lore = new ArrayList<>();
+        lore.add(AuditTexts.sentence(messages, event).colorIfAbsent(NamedTextColor.GRAY));
+        lore.add(text("audit.gui.when", TIME_FORMAT.format(event.timestamp()),
+                MessageService.markup(messages.get(MessageKey.of("audit.gui.source." + event.source().name().toLowerCase(Locale.ROOT))))));
+        if (!event.success()) {
+            lore.add(text("audit.gui.result.failure"));
+        }
         return GuiItem.of(material, name, lore);
     }
 

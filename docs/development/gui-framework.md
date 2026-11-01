@@ -420,6 +420,19 @@ hopping - `AbstractListGuiPage` provides all of that. The click handler
 domain logic, never SQL or computation directly - see "The One
 Architecture Rule Still Holds" above.
 
+## Added in 1.9
+
+- **`GuiRows`** (API 1.8): `GuiRows.place(view, viewer, row, column, glass, label, buttons)`
+  draws a label pane and the buttons after it and returns those that did
+  not fit; `GuiButton.display(item)` puts a value among buttons. See the
+  colour meanings in [ADR 0027](../architecture/decisions/0027-menu-design-system.md).
+- **Live pages** (API 1.8): a page whose `live()` returns true is drawn
+  again once a second while it is open. It must draw synchronously - a
+  page that loads asynchronously would flash its loading placeholder.
+- **`GameNames`** (core): game modes, difficulties, effects and entity
+  types as translatable components, `GameNames.arg(...)` for a message
+  argument (`<lang:...>`), `GameNames.clock(ticks)` for the time of day.
+
 ## Added in 1.8
 
 - **The frame** (see "Slots"): `AbstractGuiPage` draws the header in the

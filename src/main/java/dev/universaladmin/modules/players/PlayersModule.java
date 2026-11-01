@@ -34,6 +34,8 @@ import dev.universaladmin.modules.players.inventory.LiveInventoryService;
 import dev.universaladmin.modules.players.jdbc.JdbcPlayerProfileRepository;
 import dev.universaladmin.scheduler.TaskScheduler;
 import java.time.Instant;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -153,12 +155,15 @@ public final class PlayersModule implements Module {
                 // audit trail exists for. The IP itself never goes into the
                 // summary/metadata: an audit-log viewer without
                 // PlayerPermissions.IP must not learn it that way.
+                .auditArgs(input -> List.of(PlayerNames.of(input.targetId())))
                 .auditSummary(input -> "Viewed IP address of " + PlayerNames.of(input.targetId()))
                 .build());
         actions.register(ActionDefinition.builder(new TeleportPlayerAction(scheduler))
                 .permission(PlayerPermissions.TELEPORT)
                 .module(module)
                 .target(PlayersModule::teleportTarget)
+                .auditArgs(input -> List.of("text:players.audit.teleport." + input.kind().name().toLowerCase(Locale.ROOT).replace('_', '-'),
+                        PlayerNames.of(input.targetId())))
                 .auditSummary(input -> "Teleport (" + input.kind() + ") " + PlayerNames.of(input.targetId()))
                 .build());
         actions.register(ActionDefinition.builder(new RecordInventoryEditAction(
@@ -166,6 +171,7 @@ public final class PlayersModule implements Module {
                 .permission(PlayerPermissions.INVENTORY_EDIT)
                 .module(module)
                 .target(PlayersModule::editTarget)
+                .auditArgs(input -> List.of(input.targetName(), input.summary().changedSlots()))
                 .auditSummary(input -> "Edited inventory of " + input.targetName() + " live ("
                         + input.summary().changedSlots() + " slot(s) changed)")
                 .auditDetails((input, result) -> inventoryDetails(result))
@@ -175,6 +181,7 @@ public final class PlayersModule implements Module {
                 .permission(PlayerPermissions.ENDERCHEST_EDIT)
                 .module(module)
                 .target(PlayersModule::editTarget)
+                .auditArgs(input -> List.of(input.targetName(), input.summary().changedSlots()))
                 .auditSummary(input -> "Edited ender chest of " + input.targetName() + " live ("
                         + input.summary().changedSlots() + " slot(s) changed)")
                 .auditDetails((input, result) -> inventoryDetails(result))
@@ -183,6 +190,7 @@ public final class PlayersModule implements Module {
                 .permission(PlayerPermissions.INVENTORY_EDIT)
                 .module(module)
                 .target(input -> Optional.of(ActionTarget.player(input.targetId(), PlayerNames.of(input.targetId()))))
+                .auditArgs(input -> List.of(PlayerNames.of(input.targetId())))
                 .auditSummary(input -> "Cleared inventory of " + PlayerNames.of(input.targetId()))
                 .auditDetails((input, result) -> inventoryDetails(result))
                 .build());

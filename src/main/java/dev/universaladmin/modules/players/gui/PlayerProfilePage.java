@@ -12,6 +12,7 @@ import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.gui.PlayerMenuEntry;
 import dev.universaladmin.gui.PlayerMenuGroup;
+import dev.universaladmin.localization.GameNames;
 import dev.universaladmin.modules.players.PlayerPermissions;
 import dev.universaladmin.modules.players.PlayerSnapshot;
 import dev.universaladmin.modules.players.action.GetPlayerIpAddressAction;
@@ -35,6 +36,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
 
 /**
  * A player's profile, the hub for everything about them: on the left what
@@ -279,7 +281,7 @@ public final class PlayerProfilePage extends AbstractGuiPage {
     private GuiItem condition(PlayerSnapshot snapshot, String ip) {
         List<Component> lines = new ArrayList<>();
         if (snapshot.gamemode() != null) {
-            lines.add(line("players.gui.field.gamemode", snapshot.gamemode().name()));
+            lines.add(line("players.gui.field.gamemode", GameNames.gameMode(snapshot.gamemode())));
         }
         if (snapshot.health() != null) {
             lines.add(line("players.gui.field.health", "%.1f / %.1f".formatted(snapshot.health(), snapshot.maxHealth())));
@@ -298,7 +300,8 @@ public final class PlayerProfilePage extends AbstractGuiPage {
         if (snapshot.locale() != null) {
             lines.add(line("players.gui.field.locale", snapshot.locale()));
         }
-        lines.add(line("players.gui.field.effects", snapshot.activeEffects().isEmpty() ? "-" : String.join(", ", snapshot.activeEffects())));
+        lines.add(line("players.gui.field.effects", snapshot.activeEffects().isEmpty() ? Component.text("-")
+                : Component.join(JoinConfiguration.commas(true), snapshot.activeEffects().stream().map(PlayerProfilePage::effect).toList())));
         if (ip != null) {
             lines.add(line("players.gui.field.ip", ip));
         }
@@ -309,10 +312,22 @@ public final class PlayerProfilePage extends AbstractGuiPage {
         return GuiItem.of(material, text(titleKey), lines.isEmpty() ? List.of(Component.text("-", NamedTextColor.DARK_GRAY)) : lines);
     }
 
-    /** {@code Label: value} - the label from the language file, the value as it is. */
+    /** "Speed 2 (1:30)" with the effect's name in the reader's language. */
+    private static Component effect(PotionEffect effect) {
+        long seconds = effect.getDuration() / 20L;
+        String rest = effect.isInfinite() ? " " + (effect.getAmplifier() + 1)
+                : " %d (%d:%02d)".formatted(effect.getAmplifier() + 1, seconds / 60, seconds % 60);
+        return Component.join(JoinConfiguration.noSeparators(), GameNames.effect(effect.getType()), Component.text(rest));
+    }
+
     private Component line(String labelKey, String value) {
+        return line(labelKey, Component.text(value));
+    }
+
+    /** {@code Label: value} - the label from the language file, the value as it is. */
+    private Component line(String labelKey, Component value) {
         return Component.join(JoinConfiguration.noSeparators(), text(labelKey).colorIfAbsent(NamedTextColor.GRAY),
-                Component.text(": ", NamedTextColor.DARK_GRAY), Component.text(value, NamedTextColor.WHITE));
+                Component.text(": ", NamedTextColor.DARK_GRAY), value.colorIfAbsent(NamedTextColor.WHITE));
     }
 
     private void renderPlaceholder(GuiView view, Material material, Component label) {

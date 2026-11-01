@@ -20,6 +20,7 @@ import dev.universaladmin.modules.chat.command.ChatCommands;
 import dev.universaladmin.modules.chat.gui.ChatHomePage;
 import dev.universaladmin.network.NetworkListener;
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -65,6 +66,7 @@ public final class ChatModule implements Module {
                 .validator((ctx, delay) -> delay.compareTo(Duration.ofHours(1)) > 0
                         ? Optional.of(ValidationError.of(ActionResult.FailureReason.VALIDATION, MessageKey.of("chat.slowmode-too-long")))
                         : Optional.empty())
+                .auditArgs(delay -> List.of(DurationParser.format(delay)))
                 .auditSummary(delay -> delay.isZero() ? "Turned slow mode off" : "Set slow mode to " + DurationParser.format(delay))
                 .build());
         context.registerAction(ActionDefinition.builder(new ChatActions.Clear(platform.messages(), platform.settings(), platform.scheduler()))

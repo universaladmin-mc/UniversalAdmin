@@ -5,13 +5,13 @@ import dev.universaladmin.gui.ConfirmationDialog;
 import dev.universaladmin.gui.GuiClickContext;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiPageId;
+import dev.universaladmin.localization.GameNames;
 import dev.universaladmin.modules.performance.EntityTypeCount;
 import dev.universaladmin.modules.performance.PerformancePermissions;
 import dev.universaladmin.modules.performance.action.ClearEntitiesAction;
 import dev.universaladmin.modules.performance.action.ClearEntitiesInput;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -55,11 +55,10 @@ public final class PerformanceEntityByTypePage extends AbstractListGuiPage<Entit
     @Override
     protected GuiItem render(EntityTypeCount item) {
         boolean protectedType = ctx.samplingService().isProtected(item.type());
-        String label = item.type().name().toLowerCase(Locale.ROOT).replace('_', ' ');
         List<Component> lore = protectedType
                 ? List.of(text("performance.gui.entities.count", item.count()), text("performance.gui.entities.protected"))
                 : List.of(text("performance.gui.entities.count", item.count()), text("performance.gui.entities.click-to-clear"));
-        return GuiItem.of(entityIcon(item.type()), Component.text(label), lore);
+        return GuiItem.of(entityIcon(item.type()), GameNames.entity(item.type()), lore);
     }
 
     @Override

@@ -35,6 +35,7 @@ import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
 import dev.universaladmin.status.MaintenanceStatus;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -139,24 +140,28 @@ public final class ServerModule implements Module {
                 .permission(ServerPermissions.BROADCAST)
                 .module(module)
                 .validator(nonBlank("server.action.message-required"))
+                .auditArgs(in -> List.of(in))
                 .auditSummary(in -> "Broadcast message: " + in)
                 .build());
         actions.register(ActionDefinition.builder(new BroadcastTitleAction(scheduler, notifications))
                 .permission(ServerPermissions.BROADCAST)
                 .module(module)
                 .validator(nonBlank(BroadcastTitleInput::title, "server.action.title-required"))
+                .auditArgs(in -> List.of(in.title()))
                 .auditSummary(in -> "Broadcast title: " + in.title())
                 .build());
         actions.register(ActionDefinition.builder(new BroadcastActionbarAction(scheduler, notifications))
                 .permission(ServerPermissions.BROADCAST)
                 .module(module)
                 .validator(nonBlank("server.action.message-required"))
+                .auditArgs(in -> List.of(in))
                 .auditSummary(in -> "Broadcast actionbar: " + in)
                 .build());
 
         actions.register(ActionDefinition.builder(new EnableMaintenanceAction(maintenanceService, MaintenanceScope.SERVER))
                 .permission(ServerPermissions.MAINTENANCE)
                 .module(module)
+                .auditArgs(in -> List.of(orDash(in.reason())))
                 .auditSummary(in -> "Enabled maintenance mode" + reasonSuffix(in.reason()))
                 .auditDetails((in, result) -> AuditDetails.builder().reason(in.reason()).newValue("enabled").build())
                 .build());
@@ -169,6 +174,7 @@ public final class ServerModule implements Module {
         actions.register(ActionDefinition.builder(new SetMaintenanceAllowedPlayersAction(maintenanceService, MaintenanceScope.SERVER))
                 .permission(ServerPermissions.MAINTENANCE)
                 .module(module)
+                .auditArgs(in -> List.of(in.size()))
                 .auditSummary(in -> "Updated maintenance allow-list (" + players(in.size()) + ")")
                 .build());
 
@@ -176,6 +182,7 @@ public final class ServerModule implements Module {
                 .permission(ServerPermissions.MAINTENANCE_NETWORK)
                 .module(module)
                 .validator(requireNetwork(network))
+                .auditArgs(in -> List.of(orDash(in.reason())))
                 .auditSummary(in -> "Enabled network maintenance mode" + reasonSuffix(in.reason()))
                 .auditDetails((in, result) -> AuditDetails.builder().reason(in.reason()).newValue("enabled").build())
                 .build());
@@ -190,12 +197,14 @@ public final class ServerModule implements Module {
                 .permission(ServerPermissions.MAINTENANCE_NETWORK)
                 .module(module)
                 .validator(requireNetwork(network))
+                .auditArgs(in -> List.of(in.size()))
                 .auditSummary(in -> "Updated network maintenance allow-list (" + players(in.size()) + ")")
                 .build());
 
         actions.register(ActionDefinition.builder(new ShutdownAction(scheduler, lifecycleService))
                 .permission(ServerPermissions.SHUTDOWN)
                 .module(module)
+                .auditArgs(in -> List.of(orDash(in)))
                 .auditSummary(in -> "Shut down the server" + reasonSuffix(in))
                 .build());
         actions.register(ActionDefinition.builder(new CancelShutdownAction(scheduler, lifecycleService))
@@ -206,6 +215,7 @@ public final class ServerModule implements Module {
         actions.register(ActionDefinition.builder(new RestartAction(scheduler, lifecycleService))
                 .permission(ServerPermissions.RESTART)
                 .module(module)
+                .auditArgs(in -> List.of(orDash(in)))
                 .auditSummary(in -> "Restarted the server" + reasonSuffix(in))
                 .build());
         actions.register(ActionDefinition.builder(new CancelRestartAction(scheduler, lifecycleService))
@@ -213,6 +223,11 @@ public final class ServerModule implements Module {
                 .module(module)
                 .auditSummary(in -> "Cancelled pending restart")
                 .build());
+    }
+
+    /** A reason for the audit sentence - "-" when none was given. */
+    private static String orDash(String reason) {
+        return reason == null || reason.isBlank() ? "-" : reason;
     }
 
     private static String players(int count) {

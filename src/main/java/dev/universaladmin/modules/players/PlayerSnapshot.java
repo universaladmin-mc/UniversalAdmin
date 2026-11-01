@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.bukkit.GameMode;
+import org.bukkit.potion.PotionEffect;
 
 /**
  * Full live projection for {@code PlayerProfilePage} - built on demand by
@@ -39,7 +40,7 @@ public record PlayerSnapshot(
         Integer level,
         Integer ping,
         String locale,
-        List<String> activeEffects,
+        List<PotionEffect> activeEffects,
         String respawnLocation) {
 
     public PlayerSnapshot {

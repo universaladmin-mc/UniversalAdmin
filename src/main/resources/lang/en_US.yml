@@ -16,6 +16,13 @@ plugin:
     database: "<white>Database:</white> <aqua>{0}</aqua>"
 
 players:
+  audit:
+    teleport:
+      admin-to-player: "teleported to the player"
+      bring-to-admin: "brought the player"
+      player-to-player: "teleported the player to another"
+      world-spawn: "teleported the player to the world spawn"
+      bed-respawn: "teleported the player to their bed"
   not-found: "No profile known for {0}."
   action:
     offline: "<red>That player is no longer online."
@@ -552,6 +559,12 @@ server:
       error: "<red>Something went wrong running that action."
     home:
       title: "<gold><bold>Server"
+      row:
+        status: "<aqua><bold>Status"
+        broadcast: "<green><bold>Announce"
+        maintenance: "<gold><bold>Maintenance"
+        lifecycle: "<red><bold>Restart & stop"
+      cores: "<gray>{0} cores"
       version: "<gray>Version"
       version-lore: "<white>v{0} | {1} | MC {2} | Java {3}"
       uptime: "<gray>Uptime"
@@ -627,6 +640,17 @@ worlds:
     invalid-gamerule-value: "<red><white>{0}</white> is not a valid value for <white>{1}</white>."
     gamerule-name-required: "<red>A gamerule name is required."
   gui:
+    row:
+      world: "<aqua><bold>World"
+      settings: "<green><bold>Settings"
+      go: "<blue><bold>Go there"
+    hint:
+      change: "<dark_gray>Click to change"
+    environment:
+      normal: "Overworld"
+      nether: "Nether"
+      the_end: "The End"
+      custom: "Custom"
     not-found: "<red>That world is no longer loaded."
     action:
       success: "<green>Done."
@@ -645,6 +669,7 @@ worlds:
       time: "Time: {0}"
       weather: "Weather: {0}"
     field:
+      ticks: "<gray>{0} ticks"
       environment: "Environment"
       seed: "Seed"
       spawn: "Spawn"
@@ -774,6 +799,8 @@ whitelist:
     network-removed: "<gray>Removed <white>{0}</white> from the network whitelist."
 
 performance:
+  audit:
+    all-worlds: "all worlds"
   action:
     no-clearable-types: "<red>Every selected type is protected or reserved for players - nothing to clear."
     no-types-selected: "<red>Select at least one entity type."
@@ -787,6 +814,17 @@ performance:
       success: "<green>Done."
       error: "<red>Something went wrong running that action."
     home:
+      row:
+        now: "<aqua><bold>Right now"
+        health: "<aqua><bold>Health"
+        details: "<blue><bold>Details"
+      light:
+        good: "<green>good"
+        close: "<yellow>close to the limit"
+        bad: "<red>past the limit"
+        limit: "<gray>Staff are alerted at {0} (performance.alerts)"
+      tps-hint: "<dark_gray>Ticks per second - 20 is full speed"
+      mspt-hint: "<dark_gray>Milliseconds per tick - up to 50 keeps 20 TPS"
       title: "<gold><bold>Performance"
       tps: "<gray>TPS"
       tps-history-avg: "<gray>5m avg: <white>{0}"
@@ -828,7 +866,323 @@ performance:
     all-worlds: "all worlds"
 
 audit:
+  entry:
+    core:
+      chat-clear:
+        title: "Chat cleared"
+        text: "{0} cleared the chat"
+      chat-lock:
+        title: "Chat locked"
+        text: "{0} locked the chat"
+      chat-slowmode:
+        title: "Slow mode"
+        text: "{0} set slow mode to {2} (0s is off)"
+      chat-staff-message:
+        title: "Staff chat"
+        text: "{0} wrote in the staff chat"
+      chat-staff-toggle:
+        title: "Staff chat switched"
+        text: "{0} switched the staff chat"
+      chat-unlock:
+        title: "Chat unlocked"
+        text: "{0} unlocked the chat"
+      config-reload:
+        title: "Reloaded"
+        text: "{0} reloaded the configuration"
+      moderation-alts-forget:
+        title: "Addresses deleted"
+        text: "{0} deleted the stored addresses of {2}"
+      moderation-alts-view:
+        title: "Alts viewed"
+        text: "{0} looked up possible alts of {2}"
+      moderation-ban:
+        title: "Ban"
+        text: "{0} banned {2}: {3}"
+      moderation-freeze:
+        title: "Freeze"
+        text: "{0} froze {2}: {3}"
+      moderation-freeze-disconnect-notice:
+        title: "Left while frozen"
+        text: "{2} left the server while frozen"
+      moderation-godmode:
+        title: "Godmode"
+        text: "{0} switched godmode"
+      moderation-import:
+        title: "Import"
+        text: "{0} imported punishments from {2}"
+      moderation-ipban:
+        title: "IP ban"
+        text: "{0} IP-banned {2}: {3}"
+      moderation-kick:
+        title: "Kick"
+        text: "{0} kicked {2}: {3}"
+      moderation-mute:
+        title: "Mute"
+        text: "{0} muted {2}: {3}"
+      moderation-no-collision:
+        title: "No collision"
+        text: "{0} switched collision"
+      moderation-notes-add:
+        title: "Note added"
+        text: "{0} wrote a note about {2}: {3}"
+      moderation-notes-remove:
+        title: "Note removed"
+        text: "{0} removed note #{2}"
+      moderation-punish:
+        title: "Punished with a template"
+        text: "{0} punished {1} with a template"
+      moderation-removewarn:
+        title: "Warning removed"
+        text: "{0} removed warning #{3} from {2}"
+      moderation-staffmode-enter:
+        title: "Staff mode on"
+        text: "{0} entered staff mode"
+      moderation-staffmode-exit:
+        title: "Staff mode off"
+        text: "{0} left staff mode"
+      moderation-staffmode-recover:
+        title: "Staff mode restored"
+        text: "The inventory of {2} was restored after staff mode was not left cleanly"
+      moderation-tempban:
+        title: "Temp ban"
+        text: "{0} banned {2} for {4}: {3}"
+      moderation-tempmute:
+        title: "Temp mute"
+        text: "{0} muted {2} for {4}: {3}"
+      moderation-unban:
+        title: "Unban"
+        text: "{0} unbanned {2}"
+      moderation-unfreeze:
+        title: "Unfrozen"
+        text: "{0} unfroze {2}"
+      moderation-unmute:
+        title: "Unmute"
+        text: "{0} unmuted {2}"
+      moderation-vanish:
+        title: "Vanish"
+        text: "{0} switched vanish"
+      moderation-warn:
+        title: "Warning"
+        text: "{0} warned {2}: {3}"
+      network-alert:
+        title: "Network alert"
+        text: "{0} sent an alert to the network: {2}"
+      network-bring:
+        title: "Brought"
+        text: "{0} brought {2} to {3}"
+      network-connect:
+        title: "Connected"
+        text: "{0} connected to {2}"
+      network-goto:
+        title: "Changed server"
+        text: "{0} went to {2}"
+      network-send:
+        title: "Sent"
+        text: "{0} sent {2} to {3}"
+      nick-clear:
+        title: "Nick removed"
+        text: "{0} removed the nick of {2}"
+      nick-set:
+        title: "Nick"
+        text: "{0} took the nick {2}"
+      performance-clear-entities:
+        title: "Entities cleared"
+        text: "{0} cleared entities ({2}) in {3}"
+      players-collision-toggle:
+        title: "Collision"
+        text: "{0} switched collision for {1}"
+      players-effects-add:
+        title: "Effect given"
+        text: "{0} gave {1} {2} {3}"
+      players-effects-clear:
+        title: "Effects cleared"
+        text: "{0} cleared the effects of {1}"
+      players-effects-remove:
+        title: "Effect removed"
+        text: "{0} removed {2} from {1}"
+      players-enderchest-edit:
+        title: "Ender chest edited"
+        text: "{0} edited the ender chest of {2} ({3} slots)"
+      players-extinguish:
+        title: "Put out"
+        text: "{0} put out the fire on {1}"
+      players-feed:
+        title: "Fed"
+        text: "{0} fed {1}"
+      players-fly-speed:
+        title: "Fly speed"
+        text: "{0} set the fly speed of {1} to {2}"
+      players-fly-toggle:
+        title: "Flight"
+        text: "{0} switched flight for {1}"
+      players-gamemode:
+        title: "Game mode"
+        text: "{0} set the game mode of {1} to {2}"
+      players-get-ip-address:
+        title: "IP address viewed"
+        text: "{0} looked at the IP address of {2}"
+      players-get-profile:
+        title: "Profile viewed"
+        text: "{0} looked at the profile of {1}"
+      players-glow-toggle:
+        title: "Glowing"
+        text: "{0} switched glowing for {1}"
+      players-gravity-toggle:
+        title: "Gravity"
+        text: "{0} switched gravity for {1}"
+      players-heal:
+        title: "Healed"
+        text: "{0} healed {1}"
+      players-inventory-clear:
+        title: "Inventory cleared"
+        text: "{0} cleared the inventory of {2}"
+      players-inventory-edit:
+        title: "Inventory edited"
+        text: "{0} edited the inventory of {2} ({3} slots)"
+      players-set-food:
+        title: "Food"
+        text: "{0} set the food of {1} to {2}"
+      players-set-health:
+        title: "Health"
+        text: "{0} set the health of {1} to {2}"
+      players-set-level:
+        title: "Level"
+        text: "{0} set the level of {1} to {2}"
+      players-set-xp:
+        title: "XP"
+        text: "{0} set the XP progress of {1} to {2}"
+      players-teleport:
+        title: "Teleport"
+        text: "{0}: {2} ({3})"
+      players-walk-speed:
+        title: "Walk speed"
+        text: "{0} set the walk speed of {1} to {2}"
+      reports-claim:
+        title: "Report taken"
+        text: "{0} took report {1}: {2}"
+      reports-create:
+        title: "Report"
+        text: "{0} reported {2}: {3}"
+      reports-reject:
+        title: "Report rejected"
+        text: "{0} rejected report {1}: {2}"
+      reports-resolve:
+        title: "Report resolved"
+        text: "{0} resolved report {1}: {2}"
+      reports-teleport:
+        title: "To the report"
+        text: "{0} went to report {1}"
+      server-broadcast-actionbar:
+        title: "Action bar to all"
+        text: "{0} showed everyone in the action bar: {2}"
+      server-broadcast-message:
+        title: "Message to all"
+        text: "{0} sent everyone a message: {2}"
+      server-broadcast-title:
+        title: "Title to all"
+        text: "{0} showed everyone a title: {2}"
+      server-maintenance-allowed-players:
+        title: "Maintenance list"
+        text: "{0} changed who may join during maintenance ({2} players)"
+      server-maintenance-disable:
+        title: "Maintenance off"
+        text: "{0} switched maintenance off"
+      server-maintenance-enable:
+        title: "Maintenance on"
+        text: "{0} switched maintenance on: {2}"
+      server-maintenance-network-allowed-players:
+        title: "Network maintenance list"
+        text: "{0} changed who may join the network during maintenance ({2} players)"
+      server-maintenance-network-disable:
+        title: "Network maintenance off"
+        text: "{0} switched network maintenance off"
+      server-maintenance-network-enable:
+        title: "Network maintenance on"
+        text: "{0} switched network maintenance on: {2}"
+      server-restart:
+        title: "Restart"
+        text: "{0} restarted the server: {2}"
+      server-restart-cancel:
+        title: "Restart cancelled"
+        text: "{0} cancelled the restart"
+      server-shutdown:
+        title: "Shutdown"
+        text: "{0} stopped the server: {2}"
+      server-shutdown-cancel:
+        title: "Shutdown cancelled"
+        text: "{0} cancelled the shutdown"
+      settings-set:
+        title: "Setting changed"
+        text: "{0} changed the setting {2}"
+      update-apply:
+        title: "Update"
+        text: "{0} installed an update"
+      whitelist-add:
+        title: "Whitelisted"
+        text: "{0} put {2} on the whitelist"
+      whitelist-disable:
+        title: "Whitelist off"
+        text: "{0} switched the whitelist off"
+      whitelist-enable:
+        title: "Whitelist on"
+        text: "{0} switched the whitelist on"
+      whitelist-network-add:
+        title: "On the network whitelist"
+        text: "{0} put {2} on the network whitelist"
+      whitelist-network-disable:
+        title: "Network whitelist off"
+        text: "{0} switched the network whitelist off"
+      whitelist-network-enable:
+        title: "Network whitelist on"
+        text: "{0} switched the network whitelist on"
+      whitelist-network-remove:
+        title: "Off the network whitelist"
+        text: "{0} took {2} off the network whitelist"
+      whitelist-remove:
+        title: "Off the whitelist"
+        text: "{0} took {2} off the whitelist"
+      worlds-border-center:
+        title: "Border center"
+        text: "{0} moved the world border of {2} to {3}, {4}"
+      worlds-border-damage:
+        title: "Border damage"
+        text: "{0} changed the border damage of {2}"
+      worlds-border-size:
+        title: "Border size"
+        text: "{0} set the world border of {2} to {3} blocks"
+      worlds-border-warning:
+        title: "Border warning"
+        text: "{0} changed the border warning of {2}"
+      worlds-difficulty-set:
+        title: "Difficulty"
+        text: "{0} set the difficulty of {2} to {3}"
+      worlds-gamerule-set:
+        title: "Gamerule"
+        text: "{0} set {3} in {2} to {4}"
+      worlds-spawn-set:
+        title: "Spawn set"
+        text: "{0} set the spawn of {2}"
+      worlds-teleport-to-spawn:
+        title: "To the spawn"
+        text: "{0} went to the spawn of {2}"
+      worlds-time-set:
+        title: "Time"
+        text: "{0} set the time in {2} to {3}"
+      worlds-weather-set:
+        title: "Weather"
+        text: "{0} set the weather in {2} to {3}"
   gui:
+    row:
+      entry: "<aqua><bold>Entry"
+      details: "<aqua><bold>Details"
+    when: "<dark_gray>{0} · {1}"
+    source:
+      gui: "menu"
+      command: "command"
+      web: "web"
+      api: "API"
+      extension: "extension"
+      system: "automatic"
     title: "<gold>Audit Log"
     detail-title: "<gold>Audit Entry"
     filter:
@@ -872,6 +1226,9 @@ audit:
       failure: "<red>Failure"
 
 gui:
+  welcome:
+    menu: "<gold>UniversalAdmin</gold> <gray>- <click:run_command:'/admin'><hover:show_text:'<gray>Open the menu'><white><u>/admin</u></white></hover></click> opens the menu: players, moderation, server, worlds, settings and your own status."
+    language: "<gray>Your game is in English. <click:run_command:''/admin settings set general.language {0}''><hover:show_text:''<gray>general.language: {0}''><green>[Switch UniversalAdmin to English]</green></hover></click>"
   hint:
     open: "<dark_gray>Click to open"
   home: "<gold>Main menu"
@@ -1705,6 +2062,8 @@ reports:
   teleported-remote: "<gray>Sending you to <aqua>{2}</aqua> for report <white>#{0}</white> about <white>{1}</white>..."
 
 nick:
+  audit:
+    random: "(random)"
   toggle:
     nicked: "Nick {0}"
     plain: "Nick"

@@ -29,6 +29,18 @@ public interface MessageService {
     String get(MessageKey key, Object... args);
 
     /**
+     * Like {@link #get(MessageKey, Object...)}, but from {@code locale}
+     * (e.g. {@code de_DE}) instead of the server's language - for a message
+     * meant for one player in their own language. Falls back like the
+     * server's language does; the default ignores {@code locale}.
+     *
+     * @since 1.8
+     */
+    default String get(String locale, MessageKey key, Object... args) {
+        return get(key, args);
+    }
+
+    /**
      * Whether {@code key} resolves in the active locale or the fallback -
      * for optional, overridable texts (e.g. a localized module name) where a
      * missing key should fall back to something else instead of showing a

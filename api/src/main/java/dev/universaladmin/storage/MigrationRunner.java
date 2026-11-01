@@ -42,16 +42,17 @@ public final class MigrationRunner {
      * Registers a migration. Registering the same migration class again (an
      * extension whose plugin was reloaded) is a no-op.
      *
-     * @throws IllegalStateException if a <i>different</i> migration already uses the same version -
-     *                               versions are global across the core and every extension
+     * @throws IllegalStateException if a <i>different</i> migration already uses the same version in the
+     *                               same {@link Migration#namespace() namespace}
      */
     public synchronized void register(Migration migration) {
         for (Migration existing : migrations) {
-            if (existing.version() == migration.version()) {
+            if (existing.version() == migration.version() && existing.namespace().equals(migration.namespace())) {
                 if (existing.getClass().equals(migration.getClass())) {
                     return;
                 }
-                throw new IllegalStateException("Migration version " + migration.version() + " is used by both "
+                throw new IllegalStateException("Migration version " + migration.version()
+                        + (migration.namespace().isEmpty() ? "" : " of " + migration.namespace()) + " is used by both "
                         + existing.getClass().getName() + " and " + migration.getClass().getName());
             }
         }
@@ -75,19 +76,24 @@ public final class MigrationRunner {
      * applied.
      */
     public void runPending() {
+        // The shared numbering (UniversalAdmin's own tables) first - an
+        // extension's migrations may build on them.
         List<Migration> ordered = new ArrayList<>(migrations);
-        ordered.sort(Comparator.comparingInt(Migration::version));
+        ordered.sort(Comparator.comparing((Migration migration) -> !migration.namespace().isEmpty())
+                .thenComparing(Migration::namespace)
+                .thenComparingInt(Migration::version));
 
         try (Connection connection = dataSource.getConnection()) {
             boolean locked = lock(connection);
             try {
                 ensureSchemaVersionTable(connection);
-                Set<Integer> applied = appliedVersions(connection);
+                Set<String> applied = appliedVersions(connection);
                 for (Migration migration : ordered) {
-                    if (applied.contains(migration.version())) {
+                    if (applied.contains(id(migration.namespace(), migration.version()))) {
                         continue;
                     }
-                    logger.info(() -> "Applying migration " + migration.version() + ": " + migration.description());
+                    logger.info(() -> "Applying migration " + (migration.namespace().isEmpty() ? "" : migration.namespace() + ":")
+                            + migration.version() + ": " + migration.description());
                     migration.migrate(connection);
                     recordVersion(connection, migration);
                 }
@@ -138,26 +144,56 @@ public final class MigrationRunner {
                         applied_at BIGINT NOT NULL
                     )
                     """);
+            statement.execute("""
+                    CREATE TABLE IF NOT EXISTS ua_extension_migrations (
+                        namespace VARCHAR(64) NOT NULL,
+                        version INTEGER NOT NULL,
+                        description VARCHAR(255) NOT NULL,
+                        applied_at BIGINT NOT NULL,
+                        PRIMARY KEY (namespace, version)
+                    )
+                    """);
         }
     }
 
-    private Set<Integer> appliedVersions(Connection connection) throws SQLException {
-        Set<Integer> applied = new HashSet<>();
+    private static String id(String namespace, int version) {
+        return namespace + ":" + version;
+    }
+
+    private Set<String> appliedVersions(Connection connection) throws SQLException {
+        Set<String> applied = new HashSet<>();
         try (Statement statement = connection.createStatement();
                 ResultSet resultSet = statement.executeQuery("SELECT version FROM schema_version")) {
             while (resultSet.next()) {
-                applied.add(resultSet.getInt(1));
+                applied.add(id("", resultSet.getInt(1)));
+            }
+        }
+        try (Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery("SELECT namespace, version FROM ua_extension_migrations")) {
+            while (resultSet.next()) {
+                applied.add(id(resultSet.getString(1), resultSet.getInt(2)));
             }
         }
         return applied;
     }
 
     private void recordVersion(Connection connection, Migration migration) throws SQLException {
+        if (migration.namespace().isEmpty()) {
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "INSERT INTO schema_version (version, description, applied_at) VALUES (?, ?, ?)")) {
+                statement.setInt(1, migration.version());
+                statement.setString(2, migration.description());
+                statement.setLong(3, System.currentTimeMillis());
+                statement.executeUpdate();
+            }
+            return;
+        }
         try (PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO schema_version (version, description, applied_at) VALUES (?, ?, ?)")) {
-            statement.setInt(1, migration.version());
-            statement.setString(2, migration.description());
-            statement.setLong(3, System.currentTimeMillis());
+                "INSERT INTO ua_extension_migrations (namespace, version, description, applied_at) VALUES (?, ?, ?, ?)")) {
+            statement.setString(1, migration.namespace());
+            statement.setInt(2, migration.version());
+            statement.setString(3, migration.description());
+            statement.setLong(4, System.currentTimeMillis());
             statement.executeUpdate();
         }
     }

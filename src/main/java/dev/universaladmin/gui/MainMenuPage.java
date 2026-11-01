@@ -69,6 +69,12 @@ public final class MainMenuPage extends AbstractGuiPage {
         this.network = network;
     }
 
+    /** Players online, TPS, open reports and your own switches change while you look. */
+    @Override
+    public boolean live() {
+        return true;
+    }
+
     @Override
     protected Component title(Player viewer) {
         return text("gui.main-menu.title");

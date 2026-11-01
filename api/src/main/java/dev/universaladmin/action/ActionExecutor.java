@@ -3,6 +3,7 @@ package dev.universaladmin.action;
 import dev.universaladmin.audit.AuditEvent;
 import dev.universaladmin.audit.AuditEventType;
 import dev.universaladmin.audit.AuditService;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,6 +31,15 @@ import java.util.logging.Logger;
  * calls out as not following the pattern.
  */
 public final class ActionExecutor {
+
+    /**
+     * The audit metadata key prefix of the values for the translated sentence:
+     * {@code arg.0} is {@code {2}} in the template - see
+     * {@link ActionDefinition.Builder#auditArgs}.
+     *
+     * @since 1.8
+     */
+    public static final String AUDIT_ARG_PREFIX = "arg.";
 
     private final ActionRegistry registry;
     private final AuditService auditService;
@@ -179,10 +189,22 @@ public final class ActionExecutor {
                 .newValue(details.newValue())
                 .world(details.world())
                 .position(details.position())
-                .metadata(details.metadata())
+                .metadata(withArgs(details.metadata(), definition.auditArgs().apply(input)))
                 .correlationId(details.correlationId());
         definition.targetExtractor().apply(input).ifPresent(entry::target);
         return auditService.record(entry.build());
+    }
+
+    /** The values for the translated sentence as {@code arg.0}, {@code arg.1}, ... - see {@link ActionDefinition.Builder#auditArgs}. */
+    private static Map<String, Object> withArgs(Map<String, Object> metadata, List<?> args) {
+        if (args == null || args.isEmpty()) {
+            return metadata;
+        }
+        Map<String, Object> merged = new LinkedHashMap<>(metadata == null ? Map.of() : metadata);
+        for (int i = 0; i < args.size(); i++) {
+            merged.put(AUDIT_ARG_PREFIX + i, args.get(i) == null ? "" : String.valueOf(args.get(i)));
+        }
+        return merged;
     }
 
     private <R> String defaultReason(ActionResult<R> result) {

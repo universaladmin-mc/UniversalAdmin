@@ -31,6 +31,6 @@ final class PlayerGuiFormat {
     }
 
     static String coordinates(Double x, Double y, Double z) {
-        return (x == null || y == null || z == null) ? "-" : "%.1f, %.1f, %.1f".formatted(x, y, z);
+        return (x == null || y == null || z == null) ? "-" : String.format(Locale.ROOT, "%.1f, %.1f, %.1f", x, y, z);
     }
 }

@@ -9,12 +9,12 @@ import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
 import dev.universaladmin.module.MenuGroup;
-import dev.universaladmin.modules.performance.command.PerformanceCommands;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
 import dev.universaladmin.module.ModuleId;
 import dev.universaladmin.modules.performance.action.ClearEntitiesAction;
+import dev.universaladmin.modules.performance.command.PerformanceCommands;
 import dev.universaladmin.modules.performance.gui.PerformanceEntityByTypePage;
 import dev.universaladmin.modules.performance.gui.PerformanceEntityOverviewPage;
 import dev.universaladmin.modules.performance.gui.PerformanceGuiContext;
@@ -23,6 +23,8 @@ import dev.universaladmin.modules.performance.gui.PerformanceWorldsPage;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.CoreSettings;
 import dev.universaladmin.settings.SettingsService;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -102,6 +104,8 @@ public final class PerformanceModule implements Module {
                         ? Optional.of(ValidationError.of(
                                 ActionResult.FailureReason.VALIDATION, MessageKey.of("performance.action.no-types-selected")))
                         : Optional.empty())
+                .auditArgs(input -> List.of(input.entityTypes().stream().map(type -> type.name().toLowerCase(Locale.ROOT)).sorted()
+                        .collect(Collectors.joining(", ")), input.worldName() == null ? "text:performance.audit.all-worlds" : input.worldName()))
                 .auditSummary(input -> "Cleared entities ("
                         + input.entityTypes().stream().map(Enum::name).sorted().collect(Collectors.joining(", "))
                         + ") in " + (input.worldName() == null ? "all worlds" : input.worldName()))

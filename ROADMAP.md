@@ -117,13 +117,23 @@ welcome as [GitHub issues](https://github.com/universaladmin-mc/UniversalAdmin/i
 - [x] **Staff status in the action bar** and a **visible freeze** (a title
       for the frozen player, a marker above their head for staff)
 
+## Done - 1.9.0
+
+- [x] **Menu overhaul, part 2**: server, worlds and performance as hubs with
+      live values and traffic lights; the audit log in the server's language
+      ([ADR 0028](docs/architecture/decisions/0028-audit-log-in-the-servers-language.md))
+- [x] Minecraft's names in the game's language, new options written into an
+      existing config.yml, a first-join hint for staff
+- [x] For extensions: hub rows, live pages, translated audit entries, their
+      own migration numbering; a binary compatibility check against every
+      supported Paper version in the build
+
 ## Later - 1.x
 
 Additive, no breaking changes.
 
-- [ ] **Menu overhaul, part 2**: the server, worlds, performance and audit
-      log pages as hubs - what you see apart from what you do, live values,
-      readable audit entries
+- [ ] **Language per player**: menus and messages in each staff member's
+      game language, broadcasts in the server's
 - [ ] **Rework of existing features**: go through the modules and polish
       what grew step by step - behaviour, texts and settings that should
       work more alike

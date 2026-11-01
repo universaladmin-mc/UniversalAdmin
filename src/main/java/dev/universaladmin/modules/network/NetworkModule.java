@@ -21,6 +21,7 @@ import dev.universaladmin.modules.network.gui.NetworkSendEntry;
 import dev.universaladmin.network.NetworkListener;
 import dev.universaladmin.network.NetworkPlayer;
 import dev.universaladmin.network.NetworkService;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -58,27 +59,32 @@ public final class NetworkModule implements Module {
 
         context.registerAction(ActionDefinition.builder(new NetworkActions.Goto(network, platform.scheduler()))
                 .permission(NetworkPermissions.GOTO).module(module)
+                .auditArgs(name -> List.of(name))
                 .auditSummary(name -> "Went to " + name + " (network)")
                 .auditDetails((name, result) -> serverOf(result))
                 .build());
         context.registerAction(ActionDefinition.builder(new NetworkActions.Bring(network, platform.scheduler()))
                 .permission(NetworkPermissions.SEND).module(module)
                 .target(name -> targetOf(network, name))
+                .auditArgs(name -> List.of(name, network.serverName()))
                 .auditSummary(name -> "Brought " + name + " to " + network.serverName())
                 .auditDetails((name, result) -> serverOf(result))
                 .build());
         context.registerAction(ActionDefinition.builder(new NetworkActions.Send(network, platform.scheduler()))
                 .permission(NetworkPermissions.SEND).module(module)
                 .target(input -> targetOf(network, input.playerName()))
+                .auditArgs(input -> List.of(input.playerName(), input.server()))
                 .auditSummary(input -> "Sent " + input.playerName() + " to " + input.server())
                 .build());
         context.registerAction(ActionDefinition.builder(new NetworkActions.Connect(network, platform.scheduler()))
                 .permission(NetworkPermissions.GOTO).module(module)
+                .auditArgs(server -> List.of(server))
                 .auditSummary(server -> "Connected to " + server)
                 .build());
         NetworkActions.Alert alert = new NetworkActions.Alert(network, platform.messages(), platform.scheduler());
         context.registerAction(ActionDefinition.builder(alert)
                 .permission(NetworkPermissions.ALERT).module(module)
+                .auditArgs(message -> List.of(message))
                 .auditSummary(message -> "Network alert: " + message)
                 .build());
         NetworkListener remoteAlert = message -> alert.deliver(message.get("message", ""));

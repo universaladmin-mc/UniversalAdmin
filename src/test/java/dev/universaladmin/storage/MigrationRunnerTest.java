@@ -153,6 +153,42 @@ class MigrationRunnerTest {
         }));
     }
 
+    @Test
+    void extensionsCountInTheirOwnNamespaceAndNeverTakeEachOthersNumbers(@TempDir Path dir) throws Exception {
+        DataSource dataSource = DataSourceFactory.create(DatabaseConfig.sqlite("test.db"), dir);
+        try {
+            java.util.List<String> ran = new java.util.ArrayList<>();
+            MigrationRunner runner = new MigrationRunner(dataSource, Logger.getLogger("test"));
+            runner.register(new NamespacedMigration("alpha", 1, ran));
+            runner.register(new NamespacedMigration("beta", 1, ran));
+            runner.register(new VersionedMigration(1));
+            runner.runPending();
+            assertEquals(java.util.List.of("alpha:1", "beta:1"), ran);
+
+            // A restart, and a server that only had alpha so far gets beta later: only what is new runs.
+            MigrationRunner restarted = new MigrationRunner(dataSource, Logger.getLogger("test"));
+            restarted.register(new NamespacedMigration("alpha", 1, ran));
+            restarted.register(new NamespacedMigration("alpha", 2, ran));
+            restarted.register(new NamespacedMigration("beta", 1, ran));
+            restarted.runPending();
+            assertEquals(java.util.List.of("alpha:1", "beta:1", "alpha:2"), ran);
+        } finally {
+            ((AutoCloseable) dataSource).close();
+        }
+    }
+
+    private record NamespacedMigration(String namespace, int version, java.util.List<String> ran) implements Migration {
+        @Override
+        public String description() {
+            return namespace + " " + version;
+        }
+
+        @Override
+        public void migrate(java.sql.Connection connection) {
+            ran.add(namespace + ":" + version);
+        }
+    }
+
     private record VersionedMigration(int version) implements Migration {
         @Override
         public String description() {

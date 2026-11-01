@@ -139,10 +139,16 @@ across the whole database, not per module:
   registered directly in `UniversalAdminPlugin`.
 - **1000+**: built-in module migrations, registered by the respective
   module in `onLoad` (e.g. `PlayerProfileMigration`, version 1000).
-- **Extensions** pick a range far away from the built-ins and from each
-  other - by convention a hash-like block such as 50 000-50 999 - and
-  document it. A collision is detected at startup (same version, different
-  migration) and refused.
+- **Extensions** (since API 1.8) return their own name from
+  `Migration#namespace()` and number their migrations from 1. They are
+  tracked in `ua_extension_migrations (namespace, version)`, apart from
+  UniversalAdmin's numbering and every other extension's, so two extensions
+  can never take each other's numbers. An extension written before 1.8
+  (empty namespace) shares UniversalAdmin's numbering in `schema_version` as
+  before and picks a range far away from the built-ins, such as 50 000-50 999.
+  A collision (same namespace and version, different migration) is refused
+  at startup. Migrations of the shared numbering run first, so an
+  extension's migrations can build on UniversalAdmin's tables.
 
 Used versions: 1-2 audit, 3 network tables (`ua_network_servers`,
 `ua_network_players`, `ua_network_messages`), 4 `ua_network_players.vanished`, 1000-1001 players, 1002-1003
@@ -153,7 +159,9 @@ maintenance state, 1007 whitelist, 1008 `ua_player_notes`, 1009
 [ADR 0017](decisions/0017-maintenance-scopes.md)), 1013 `punishments.template` (see
 [ADR 0018](decisions/0018-punishment-templates.md)), 1014 `ua_whitelist` and
 `ua_whitelist_state` (see [ADR 0019](decisions/0019-network-whitelist-and-vanish.md)), 1015
-`ua_player_addresses` and `ua_alt_key` (see [ADR 0020](decisions/0020-alt-detection.md)).
+`ua_player_addresses` and `ua_alt_key` (see [ADR 0020](decisions/0020-alt-detection.md)), 1016
+`punishments.mute_kind` (see [ADR 0022](decisions/0022-mute-kinds-and-voice-chat.md)), 1017
+`ua_nicks` (see [ADR 0025](decisions/0025-nick-system.md)).
 
 Migrations run at plugin start (`storage.migrations().runPending()` in
 `UniversalAdminPlugin#onEnable`, between every module's `onLoad` and

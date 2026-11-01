@@ -2,13 +2,16 @@ package dev.universaladmin.modules.worlds.gui;
 
 import dev.universaladmin.gui.AbstractGuiPage;
 import dev.universaladmin.gui.GuiButton;
+import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiLayout;
 import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRenderContext;
+import dev.universaladmin.gui.GuiRows;
 import dev.universaladmin.gui.GuiTextInput;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.gui.SelectionDialog;
+import dev.universaladmin.localization.GameNames;
 import dev.universaladmin.modules.worlds.WeatherState;
 import dev.universaladmin.modules.worlds.WorldProfileSnapshot;
 import dev.universaladmin.modules.worlds.WorldsPermissions;
@@ -21,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
@@ -41,8 +45,6 @@ public final class WorldProfilePage extends AbstractGuiPage {
     public static final GuiPageId ID = GuiPageId.core("worlds.profile");
 
     /** How many trailing content slots the action-button row reserves - fields never spill into it. */
-    private static final int ACTION_SLOTS = 7;
-
     private final WorldsGuiContext ctx;
     private final String worldName;
 
@@ -57,6 +59,12 @@ public final class WorldProfilePage extends AbstractGuiPage {
         return Component.text(worldName);
     }
 
+    /** Players, chunks, entities and the time change while you look. */
+    @Override
+    public boolean live() {
+        return true;
+    }
+
     @Override
     protected void renderContent(GuiRenderContext context) {
         GuiView view = context.view();
@@ -69,48 +77,54 @@ public final class WorldProfilePage extends AbstractGuiPage {
 
         boolean includeSeed = viewer.hasPermission(WorldsPermissions.VIEW_SEED.value());
         WorldProfileSnapshot snapshot = ctx.infoService().profile(world, includeSeed);
-        renderFields(view, snapshot);
-        renderActions(view, viewer, snapshot);
+        GuiRows.place(view, viewer, 0, 0, GuiGlass.LIGHT_BLUE, text("worlds.gui.row.world"), infoTiles(snapshot));
+        GuiRows.place(view, viewer, 1, 0, GuiGlass.LIME, text("worlds.gui.row.settings"), settingButtons(snapshot));
+        GuiRows.place(view, viewer, 2, 0, GuiGlass.BLUE, text("worlds.gui.row.go"), List.of(
+                new GuiButton(GuiItem.of(Material.ENDER_PEARL, text("worlds.gui.buttons.teleport")),
+                        WorldsPermissions.TELEPORT, clickCtx -> teleport(clickCtx.viewer()))));
     }
 
-    private void renderFields(GuiView view, WorldProfileSnapshot snapshot) {
-        List<GuiItem> fields = new ArrayList<>();
-        fields.add(header(snapshot));
-        fields.add(field("worlds.gui.field.environment", snapshot.environment().name()));
+    private List<GuiButton> infoTiles(WorldProfileSnapshot snapshot) {
+        List<Component> header = new ArrayList<>();
+        header.add(value("worlds.gui.field.environment", text("worlds.gui.environment." + snapshot.environment().name().toLowerCase(Locale.ROOT))));
         if (snapshot.seed() != null) {
-            fields.add(field("worlds.gui.field.seed", String.valueOf(snapshot.seed())));
+            header.add(value("worlds.gui.field.seed", Component.text(snapshot.seed())));
         }
-        fields.add(field("worlds.gui.field.spawn", WorldsGuiFormat.coordinates(snapshot.spawn())));
-        fields.add(field("worlds.gui.field.players", String.valueOf(snapshot.players())));
-        fields.add(field("worlds.gui.field.chunks", String.valueOf(snapshot.loadedChunks())));
-        fields.add(field("worlds.gui.field.entities", String.valueOf(snapshot.entities())));
-        fields.add(field("worlds.gui.field.difficulty", snapshot.difficulty().name()));
-        fields.add(field("worlds.gui.field.time", String.valueOf(snapshot.time())));
-        fields.add(field("worlds.gui.field.weather", WorldsGuiFormat.weatherLabel(messages, snapshot.storm(), snapshot.thundering())));
-        fields.add(field("worlds.gui.field.border-size", "%.0f".formatted(snapshot.border().size())));
-
-        int maxFieldSlots = GuiLayout.contentSize() - ACTION_SLOTS;
-        for (int i = 0; i < fields.size() && i < maxFieldSlots; i++) {
-            view.place(GuiLayout.contentSlot(i), fields.get(i));
-        }
+        return List.of(
+                GuiButton.display(GuiItem.of(WorldsGuiFormat.material(snapshot.environment()),
+                        Component.text(snapshot.name(), NamedTextColor.GOLD), header)),
+                GuiButton.display(GuiItem.of(Material.PLAYER_HEAD, value("worlds.gui.field.players", Component.text(snapshot.players())))),
+                GuiButton.display(GuiItem.of(Material.FILLED_MAP, value("worlds.gui.field.chunks", Component.text(snapshot.loadedChunks())))),
+                GuiButton.display(GuiItem.of(Material.ARMOR_STAND, value("worlds.gui.field.entities", Component.text(snapshot.entities())))));
     }
 
-    private void renderActions(GuiView view, Player viewer, WorldProfileSnapshot snapshot) {
-        int slot = GuiLayout.contentSlot(GuiLayout.contentSize() - ACTION_SLOTS);
-        view.place(slot++, new GuiButton(GuiItem.of(Material.ENDER_PEARL, text("worlds.gui.buttons.teleport")),
-                WorldsPermissions.TELEPORT, clickCtx -> teleport(clickCtx.viewer())), viewer);
-        view.place(slot++, new GuiButton(GuiItem.of(Material.RED_BED, text("worlds.gui.buttons.set-spawn")),
-                WorldsPermissions.SPAWN, clickCtx -> setSpawn(clickCtx.viewer())), viewer);
-        view.place(slot++, new GuiButton(GuiItem.of(Material.CLOCK, text("worlds.gui.buttons.set-time")),
-                WorldsPermissions.TIME, clickCtx -> promptTime(clickCtx.viewer())), viewer);
-        view.place(slot++, new GuiButton(GuiItem.of(Material.WATER_BUCKET, text("worlds.gui.buttons.set-weather")),
-                WorldsPermissions.WEATHER, clickCtx -> promptWeather(clickCtx.viewer())), viewer);
-        view.place(slot++, new GuiButton(GuiItem.of(Material.IRON_SWORD, text("worlds.gui.buttons.set-difficulty")),
-                WorldsPermissions.DIFFICULTY, clickCtx -> promptDifficulty(clickCtx.viewer())), viewer);
-        view.place(slot++, new GuiButton(GuiItem.of(Material.BARRIER, text("worlds.gui.buttons.border")),
-                WorldsPermissions.BORDER, clickCtx -> clickCtx.open(new WorldBorderPage(ctx, worldName))), viewer);
-        view.place(slot, new GuiButton(GuiItem.of(Material.COMMAND_BLOCK, text("worlds.gui.buttons.gamerules")),
-                WorldsPermissions.GAMERULE, clickCtx -> clickCtx.open(new WorldGameRulesListPage(ctx, worldName))), viewer);
+    /** Each one shows what it is now and changes it on a click. */
+    private List<GuiButton> settingButtons(WorldProfileSnapshot snapshot) {
+        Component change = text("worlds.gui.hint.change");
+        return List.of(
+                new GuiButton(GuiItem.of(Material.CLOCK, value("worlds.gui.field.time", Component.text(GameNames.clock(snapshot.time()))),
+                        List.of(text("worlds.gui.field.ticks", snapshot.time()), change)),
+                        WorldsPermissions.TIME, clickCtx -> promptTime(clickCtx.viewer())),
+                new GuiButton(GuiItem.of(snapshot.storm() ? Material.WATER_BUCKET : Material.SUNFLOWER, value("worlds.gui.field.weather",
+                        Component.text(WorldsGuiFormat.weatherLabel(messages, snapshot.storm(), snapshot.thundering()))), List.of(change)),
+                        WorldsPermissions.WEATHER, clickCtx -> promptWeather(clickCtx.viewer())),
+                new GuiButton(GuiItem.of(Material.IRON_SWORD, value("worlds.gui.field.difficulty", GameNames.difficulty(snapshot.difficulty())),
+                        List.of(change)),
+                        WorldsPermissions.DIFFICULTY, clickCtx -> promptDifficulty(clickCtx.viewer())),
+                new GuiButton(GuiItem.of(Material.RED_BED, value("worlds.gui.field.spawn", Component.text(WorldsGuiFormat.coordinates(snapshot.spawn()))),
+                        List.of(text("worlds.gui.buttons.set-spawn"))),
+                        WorldsPermissions.SPAWN, clickCtx -> setSpawn(clickCtx.viewer())),
+                new GuiButton(GuiItem.of(Material.BARRIER, value("worlds.gui.field.border-size", Component.text("%.0f".formatted(snapshot.border().size()))),
+                        List.of(text("gui.hint.open"))),
+                        WorldsPermissions.BORDER, clickCtx -> clickCtx.open(new WorldBorderPage(ctx, worldName))),
+                new GuiButton(GuiItem.of(Material.COMMAND_BLOCK, text("worlds.gui.buttons.gamerules"), List.of(text("gui.hint.open"))),
+                        WorldsPermissions.GAMERULE, clickCtx -> clickCtx.open(new WorldGameRulesListPage(ctx, worldName))));
+    }
+
+    /** {@code Label: value} as an item name - readable without hovering. */
+    private Component value(String labelKey, Component value) {
+        return Component.join(JoinConfiguration.noSeparators(), text(labelKey).colorIfAbsent(NamedTextColor.GRAY),
+                Component.text(": ", NamedTextColor.DARK_GRAY), value.colorIfAbsent(NamedTextColor.WHITE));
     }
 
     private void teleport(Player viewer) {
@@ -147,7 +161,7 @@ public final class WorldProfilePage extends AbstractGuiPage {
     private void promptDifficulty(Player viewer) {
         SelectionDialog.open(viewer, framework, messages, ctx.scheduler(), text("worlds.gui.buttons.set-difficulty"),
                 List.of(Difficulty.values()),
-                difficulty -> GuiItem.of(Material.IRON_SWORD, Component.text(difficulty.name())),
+                difficulty -> GuiItem.of(Material.IRON_SWORD, GameNames.difficulty(difficulty)),
                 (selectCtx, difficulty) -> WorldsGuiActions.runAction(ctx, viewer, WorldActionIds.SET_DIFFICULTY,
                         new SetWorldDifficultyInput(worldName, difficulty), () -> this.open(viewer)));
     }
@@ -158,14 +172,5 @@ public final class WorldProfilePage extends AbstractGuiPage {
         } catch (NumberFormatException e) {
             return null;
         }
-    }
-
-    private GuiItem header(WorldProfileSnapshot snapshot) {
-        return GuiItem.of(Material.GRASS_BLOCK, Component.text(snapshot.name(), NamedTextColor.GOLD),
-                List.of(Component.text(snapshot.environment().name(), NamedTextColor.DARK_GRAY)));
-    }
-
-    private GuiItem field(String labelKey, String value) {
-        return GuiItem.of(Material.PAPER, text(labelKey), List.of(Component.text(value, NamedTextColor.GRAY)));
     }
 }

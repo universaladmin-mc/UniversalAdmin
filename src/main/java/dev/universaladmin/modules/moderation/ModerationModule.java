@@ -12,6 +12,7 @@ import dev.universaladmin.core.PlayerDirectory;
 import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.core.ServiceRegistry;
 import dev.universaladmin.core.UniversalAdmin;
+import dev.universaladmin.core.time.DurationParser;
 import dev.universaladmin.gui.ActionStatusToggle;
 import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.localization.ComponentMessages;
@@ -54,9 +55,9 @@ import dev.universaladmin.modules.moderation.alts.AltSupport;
 import dev.universaladmin.modules.moderation.alts.AltsMigration;
 import dev.universaladmin.modules.moderation.command.ModerationCommands;
 import dev.universaladmin.modules.moderation.gui.ModeratePlayerMenuEntry;
-import dev.universaladmin.modules.moderation.gui.ModerationQuickEntry;
 import dev.universaladmin.modules.moderation.gui.ModerationGuiContext;
 import dev.universaladmin.modules.moderation.gui.ModerationHomePage;
+import dev.universaladmin.modules.moderation.gui.ModerationQuickEntry;
 import dev.universaladmin.modules.moderation.importing.AdvancedBanImporter;
 import dev.universaladmin.modules.moderation.importing.EssentialsImporter;
 import dev.universaladmin.modules.moderation.importing.ImportAction;
@@ -95,6 +96,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -316,6 +318,7 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::targetOf)
                 .forbidSelfTarget()
                 .validator(reasonRequired(KickInput::reason))
+                .auditArgs(in -> List.of(PlayerNames.of(in.targetId()), in.reason()))
                 .auditSummary(in -> "Kicked " + PlayerNames.of(in.targetId()) + ": " + in.reason() + templateSuffix(in.template()))
                 .build());
 
@@ -325,6 +328,7 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::banTargetOf)
                 .forbidSelfTarget()
                 .validator(reasonRequired(BanInput::reason))
+                .auditArgs(in -> List.of(PlayerNames.of(in.targetId()), in.reason()))
                 .auditSummary(in -> "Banned " + PlayerNames.of(in.targetId()) + ": " + in.reason() + templateSuffix(in.template()))
                 .build());
         actions.register(ActionDefinition.builder(new BanAction(ModerationActionIds.TEMP_BAN, scheduler, punishmentService, enforcer, policy, names))
@@ -333,6 +337,7 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::banTargetOf)
                 .forbidSelfTarget()
                 .validator(and(reasonRequired(BanInput::reason), durationRequired(BanInput::expiresAt)))
+                .auditArgs(in -> List.of(PlayerNames.of(in.targetId()), in.reason(), until(in.expiresAt())))
                 .auditSummary(in -> "Temp-banned " + PlayerNames.of(in.targetId()) + ": " + in.reason() + templateSuffix(in.template()))
                 .build());
         actions.register(ActionDefinition.builder(new IpBanAction(scheduler, punishmentService, enforcer, policy, network))
@@ -341,6 +346,7 @@ public final class ModerationModule implements Module {
                 .target(in -> Optional.of(ActionTarget.player(in.targetId(), PlayerNames.of(in.targetId()))))
                 .forbidSelfTarget()
                 .validator(reasonRequired(IpBanInput::reason))
+                .auditArgs(in -> List.of(PlayerNames.of(in.targetId()), in.reason()))
                 .auditSummary(in -> "IP-banned " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
 
@@ -350,6 +356,7 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::muteTargetOf)
                 .forbidSelfTarget()
                 .validator(reasonRequired(MuteInput::reason))
+                .auditArgs(in -> List.of(PlayerNames.of(in.targetId()), in.reason()))
                 .auditSummary(in -> "Muted " + PlayerNames.of(in.targetId()) + kindSuffix(in.kind()) + ": " + in.reason()
                         + templateSuffix(in.template()))
                 .build());
@@ -359,6 +366,7 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::muteTargetOf)
                 .forbidSelfTarget()
                 .validator(and(reasonRequired(MuteInput::reason), durationRequired(MuteInput::expiresAt)))
+                .auditArgs(in -> List.of(PlayerNames.of(in.targetId()), in.reason(), until(in.expiresAt())))
                 .auditSummary(in -> "Temp-muted " + PlayerNames.of(in.targetId()) + kindSuffix(in.kind()) + ": " + in.reason()
                         + templateSuffix(in.template()))
                 .build());
@@ -369,6 +377,7 @@ public final class ModerationModule implements Module {
                 .target(in -> Optional.of(ActionTarget.player(in.targetId(), PlayerNames.of(in.targetId()))))
                 .forbidSelfTarget()
                 .validator(reasonRequired(WarnInput::reason))
+                .auditArgs(in -> List.of(PlayerNames.of(in.targetId()), in.reason()))
                 .auditSummary(in -> "Warned " + PlayerNames.of(in.targetId()) + ": " + in.reason() + templateSuffix(in.template()))
                 .build());
 
@@ -378,6 +387,7 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::freezeTargetOf)
                 .forbidSelfTarget()
                 .validator(reasonRequired(FreezeInput::reason))
+                .auditArgs(in -> List.of(PlayerNames.of(in.targetId()), in.reason()))
                 .auditSummary(in -> "Froze " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
 
@@ -385,24 +395,28 @@ public final class ModerationModule implements Module {
                 .permission(ModerationPermissions.UNBAN)
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.player(in.targetId(), PlayerNames.of(in.targetId()))))
+                .auditArgs(in -> List.of(PlayerNames.of(in.targetId())))
                 .auditSummary(in -> "Unbanned " + PlayerNames.of(in.targetId()))
                 .build());
         actions.register(ActionDefinition.builder(new UnmuteAction(punishmentService))
                 .permission(ModerationPermissions.UNMUTE)
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.player(in.targetId(), PlayerNames.of(in.targetId()))))
+                .auditArgs(in -> List.of(PlayerNames.of(in.targetId())))
                 .auditSummary(in -> "Unmuted " + PlayerNames.of(in.targetId()))
                 .build());
         actions.register(ActionDefinition.builder(new RemoveWarnAction(punishmentService))
                 .permission(ModerationPermissions.REMOVE_WARN)
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.player(in.targetId(), "warn#" + in.warnId())))
+                .auditArgs(in -> List.of(PlayerNames.of(in.targetId()), in.warnId()))
                 .auditSummary(in -> "Removed warning #" + in.warnId() + " from " + PlayerNames.of(in.targetId()))
                 .build());
         actions.register(ActionDefinition.builder(new UnfreezeAction(punishmentService, freezeRuntimeState))
                 .permission(ModerationPermissions.UNFREEZE)
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.player(in.targetId(), PlayerNames.of(in.targetId()))))
+                .auditArgs(in -> List.of(PlayerNames.of(in.targetId())))
                 .auditSummary(in -> "Unfroze " + PlayerNames.of(in.targetId()))
                 .build());
 
@@ -437,11 +451,13 @@ public final class ModerationModule implements Module {
                 .permission(ModerationPermissions.STAFFMODE_RECOVER)
                 .module(module)
                 .target(targetId -> Optional.of(ActionTarget.player(targetId, PlayerNames.of(targetId))))
+                .auditArgs(targetId -> List.of(PlayerNames.of(targetId)))
                 .auditSummary(targetId -> "Recovered staff-mode snapshot for " + PlayerNames.of(targetId))
                 .build());
         actions.register(ActionDefinition.builder(new FreezeDisconnectNoticeAction(notifications, messages))
                 .module(module)
                 .target(targetId -> Optional.of(ActionTarget.player(targetId, PlayerNames.of(targetId))))
+                .auditArgs(targetId -> List.of(PlayerNames.of(targetId)))
                 .auditSummary(targetId -> "Player disconnected while frozen: " + PlayerNames.of(targetId))
                 .build());
     }
@@ -473,6 +489,11 @@ public final class ModerationModule implements Module {
     }
 
     /** {@code " (template spam)"} for a punishment issued through a template, else empty. */
+    /** How long a temporary punishment runs, for the audit sentence - "-" without an end. */
+    private static String until(Instant expiresAt) {
+        return expiresAt == null ? "-" : DurationParser.formatRemaining(expiresAt);
+    }
+
     private static String templateSuffix(String template) {
         return template == null ? "" : " (template " + template + ")";
     }
@@ -580,12 +601,14 @@ public final class ModerationModule implements Module {
                 .module(module)
                 .target(input -> Optional.of(ActionTarget.player(input.playerId(), input.playerName())))
                 // Who looked at whose connections - the list itself stays out of the audit log.
+                .auditArgs(input -> List.of(input.playerName()))
                 .auditSummary(input -> "Viewed possible alts of " + input.playerName())
                 .build());
         context.registerAction(ActionDefinition.builder(new AltActions.Forget(alts))
                 .permission(ModerationPermissions.ALTS_FORGET)
                 .module(module)
                 .target(input -> Optional.of(ActionTarget.player(input.playerId(), input.playerName())))
+                .auditArgs(input -> List.of(input.playerName()))
                 .auditSummary(input -> "Forgot the stored addresses of " + input.playerName())
                 .build());
 
@@ -623,12 +646,14 @@ public final class ModerationModule implements Module {
                                     MessageKey.of("moderation.notes.too-long"), NoteActions.MAX_LENGTH))
                             : Optional.empty();
                 })
+                .auditArgs(input -> List.of(input.targetName(), input.text()))
                 .auditSummary(input -> "Added a note about " + input.targetName() + ": " + input.text())
                 .build());
         context.registerAction(ActionDefinition.builder(new NoteActions.Remove(notes))
                 .permission(ModerationPermissions.NOTES)
                 .module(module)
                 .target(id -> Optional.of(ActionTarget.of("note", String.valueOf(id), "note #" + id)))
+                .auditArgs(id -> List.of(id))
                 .auditSummary(id -> "Removed note #" + id)
                 .build());
 
@@ -668,6 +693,7 @@ public final class ModerationModule implements Module {
                 .permission(ModerationPermissions.IMPORT)
                 .module(ID.key().name())
                 .target(input -> Optional.of(ActionTarget.of("import", input.source(), sourceName(service, input.source()))))
+                .auditArgs(input -> List.of(sourceName(service, input.source())))
                 .auditSummary(input -> "Imported punishments from " + sourceName(service, input.source()))
                 .auditDetails((input, result) -> result instanceof ActionResult.Success<ImportSummary> success
                         ? AuditDetails.builder().metadata(Map.of(

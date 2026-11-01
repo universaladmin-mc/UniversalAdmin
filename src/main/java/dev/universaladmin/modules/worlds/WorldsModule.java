@@ -8,10 +8,10 @@ import dev.universaladmin.action.ActionValidator;
 import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.action.ValidationError;
 import dev.universaladmin.gui.GuiGlass;
+import dev.universaladmin.localization.GameNames;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
 import dev.universaladmin.module.MenuGroup;
-import dev.universaladmin.modules.worlds.command.WorldCommands;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -35,9 +35,12 @@ import dev.universaladmin.modules.worlds.action.SetWorldTimeInput;
 import dev.universaladmin.modules.worlds.action.SetWorldWeatherAction;
 import dev.universaladmin.modules.worlds.action.SetWorldWeatherInput;
 import dev.universaladmin.modules.worlds.action.TeleportAdminToWorldSpawnAction;
+import dev.universaladmin.modules.worlds.command.WorldCommands;
 import dev.universaladmin.modules.worlds.gui.WorldsGuiContext;
 import dev.universaladmin.modules.worlds.gui.WorldsHomePage;
 import dev.universaladmin.scheduler.TaskScheduler;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -95,6 +98,7 @@ public final class WorldsModule implements Module {
                 .permission(WorldsPermissions.TELEPORT)
                 .module(module)
                 .target(worldName -> Optional.of(ActionTarget.of("world", worldName, worldName)))
+                .auditArgs(worldName -> List.of(worldName))
                 .auditSummary(worldName -> "Teleported to " + worldName + "'s spawn")
                 .build());
 
@@ -102,6 +106,7 @@ public final class WorldsModule implements Module {
                 .permission(WorldsPermissions.SPAWN)
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.of("world", in.worldName(), in.worldName())))
+                .auditArgs(in -> List.of(in.worldName()))
                 .auditSummary(in -> "Set spawn for " + in.worldName())
                 .build());
 
@@ -109,6 +114,7 @@ public final class WorldsModule implements Module {
                 .permission(WorldsPermissions.TIME)
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.of("world", in.worldName(), in.worldName())))
+                .auditArgs(in -> List.of(in.worldName(), GameNames.clock(in.ticks())))
                 .auditSummary(in -> "Set time for " + in.worldName() + " to " + in.ticks())
                 .auditDetails((in, result) -> AuditDetails.builder().newValue(String.valueOf(in.ticks())).build())
                 .build());
@@ -117,6 +123,7 @@ public final class WorldsModule implements Module {
                 .permission(WorldsPermissions.WEATHER)
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.of("world", in.worldName(), in.worldName())))
+                .auditArgs(in -> List.of(in.worldName(), "text:worlds.gui.weather." + in.state().name().toLowerCase(Locale.ROOT)))
                 .auditSummary(in -> "Set weather for " + in.worldName() + " to " + in.state())
                 .auditDetails((in, result) -> AuditDetails.builder().newValue(in.state().name()).build())
                 .build());
@@ -125,6 +132,7 @@ public final class WorldsModule implements Module {
                 .permission(WorldsPermissions.DIFFICULTY)
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.of("world", in.worldName(), in.worldName())))
+                .auditArgs(in -> List.of(in.worldName(), GameNames.auditArg(GameNames.difficulty(in.difficulty()))))
                 .auditSummary(in -> "Set difficulty for " + in.worldName() + " to " + in.difficulty())
                 .auditDetails((in, result) -> AuditDetails.builder().newValue(in.difficulty().name()).build())
                 .build());
@@ -133,24 +141,28 @@ public final class WorldsModule implements Module {
                 .permission(WorldsPermissions.BORDER)
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.of("world", in.worldName(), in.worldName())))
+                .auditArgs(in -> List.of(in.worldName(), in.x(), in.z()))
                 .auditSummary(in -> "Set border center for " + in.worldName() + " to " + in.x() + "," + in.z())
                 .build());
         actions.register(ActionDefinition.builder(new SetWorldBorderSizeAction(scheduler))
                 .permission(WorldsPermissions.BORDER)
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.of("world", in.worldName(), in.worldName())))
+                .auditArgs(in -> List.of(in.worldName(), in.size()))
                 .auditSummary(in -> "Set border size for " + in.worldName() + " to " + in.size())
                 .build());
         actions.register(ActionDefinition.builder(new SetWorldBorderDamageAction(scheduler))
                 .permission(WorldsPermissions.BORDER)
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.of("world", in.worldName(), in.worldName())))
+                .auditArgs(in -> List.of(in.worldName()))
                 .auditSummary(in -> "Set border damage for " + in.worldName())
                 .build());
         actions.register(ActionDefinition.builder(new SetWorldBorderWarningAction(scheduler))
                 .permission(WorldsPermissions.BORDER)
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.of("world", in.worldName(), in.worldName())))
+                .auditArgs(in -> List.of(in.worldName()))
                 .auditSummary(in -> "Set border warning for " + in.worldName())
                 .build());
 
@@ -159,6 +171,7 @@ public final class WorldsModule implements Module {
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.of("world", in.worldName(), in.worldName())))
                 .validator(nonBlank(SetGameRuleInput::ruleName, "worlds.action.gamerule-name-required"))
+                .auditArgs(in -> List.of(in.worldName(), in.ruleName(), in.value()))
                 .auditSummary(in -> "Set gamerule " + in.ruleName() + " for " + in.worldName() + " to " + in.value())
                 .auditDetails((in, result) -> AuditDetails.builder().newValue(in.value()).build())
                 .build());

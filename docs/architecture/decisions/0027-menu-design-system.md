@@ -74,6 +74,25 @@ default and shown per viewer (`Entity#setVisibleByDefault`,
 [development rules](../../development/architecture-rules.md)) - and never
 saved with the world.
 
+## Addendum (1.9.0): the remaining pages as hubs
+
+- **Rows behind label panes** are a building block now, `GuiRows` (API 1.8):
+  the label pane's colour says what the row is for - light blue shows
+  information, blue leads to more to look at, green holds harmless actions,
+  orange actions with an effect on players, red dangerous ones, purple
+  anything else. The server, worlds, world, performance and audit entry
+  pages use them like the player profile.
+- **A value that can be changed is shown on its button**: the world's time,
+  weather, difficulty, spawn and border show what they are now and change
+  on a click - no separate field and button for the same thing.
+- **Live pages** (`GuiPage#live()`, API 1.8) are drawn again once a second
+  while open: the main menu, server, worlds, a world and performance. Only
+  the slots whose item changed reach the client.
+- **Traffic lights** on the performance page: green, yellow or red under
+  TPS, MSPT and memory, measured against the staff alert thresholds.
+- **Minecraft's own names** (game modes, difficulties, effects, entities)
+  are translatable components - the client shows them in its language.
+
 ## Consequences
 
 - One answer to "where is ...?" on every page, built-in or extension: an

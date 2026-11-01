@@ -1,9 +1,9 @@
 package dev.universaladmin.modules.settings;
 
 import dev.universaladmin.action.ActionDefinition;
-import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.ActionTarget;
+import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.module.GuiIcon;
 import dev.universaladmin.module.MenuGroup;
@@ -16,6 +16,7 @@ import dev.universaladmin.modules.settings.gui.SettingsGuiContext;
 import dev.universaladmin.modules.settings.gui.SettingsHomePage;
 import dev.universaladmin.settings.SetSettingAction;
 import dev.universaladmin.settings.SettingChange;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -53,6 +54,7 @@ public final class SettingsModule implements Module {
                 .permission(SettingsPermissions.MANAGE)
                 .module(ID.key().name())
                 .target(input -> Optional.of(ActionTarget.of("setting", input.path(), input.path())))
+                .auditArgs(input -> List.of(input.path()))
                 .auditSummary(input -> input.value() == null ? "Reset setting " + input.path() : "Changed setting " + input.path())
                 .auditFailures()
                 .auditDetails((input, result) -> result instanceof ActionResult.Success<SettingChange> success

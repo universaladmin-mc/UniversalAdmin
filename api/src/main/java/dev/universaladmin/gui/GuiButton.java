@@ -31,6 +31,18 @@ public final class GuiButton {
     }
 
     /** A button anyone who can see the page may click. */
+    /**
+     * An item that only shows something - a value, a status - placed like a
+     * button, e.g. among the entries of a {@link GuiRows} row. A click does
+     * nothing.
+     *
+     * @since 1.8
+     */
+    public static GuiButton display(GuiItem item) {
+        return new GuiButton(item, null, context -> {
+        });
+    }
+
     public static GuiButton of(GuiItem item, ClickHandler onClick) {
         return new GuiButton(item, null, onClick);
     }

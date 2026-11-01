@@ -22,6 +22,7 @@ import dev.universaladmin.modules.nick.gui.NickProfileEntry;
 import dev.universaladmin.modules.nick.jdbc.JdbcNickRepository;
 import dev.universaladmin.network.NetworkListener;
 import dev.universaladmin.status.Nicks;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -84,6 +85,7 @@ public final class NickModule implements Module {
                     return othersAllowed(ctx.actor(), input.targetId());
                 })
                 .target(input -> Optional.of(ActionTarget.player(input.targetId(), input.targetName())))
+                .auditArgs(input -> List.of(input.name() == null ? "text:nick.audit.random" : input.name()))
                 .auditSummary(input -> input.name() == null ? "Took a random nick" : "Took the nick " + input.name())
                 .auditDetails((input, result) -> result instanceof ActionResult.Success<NickRecord> success
                         ? AuditDetails.builder().newValue(success.value().name())
@@ -96,6 +98,7 @@ public final class NickModule implements Module {
                 .module(module)
                 .validator((ctx, target) -> othersAllowed(ctx.actor(), target.id()))
                 .target(target -> Optional.of(ActionTarget.player(target.id(), target.name())))
+                .auditArgs(target -> List.of(target.name()))
                 .auditSummary(target -> "Removed the nick of " + target.name())
                 .auditDetails((target, result) -> result instanceof ActionResult.Success<NickRecord> success
                         ? AuditDetails.builder().oldValue(success.value().name()).build()

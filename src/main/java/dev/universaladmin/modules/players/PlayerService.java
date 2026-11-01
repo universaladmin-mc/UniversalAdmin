@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -102,8 +103,8 @@ public final class PlayerService {
 
     private PlayerSnapshot buildOnlineSnapshot(Player player) {
         Location location = player.getLocation();
-        Location respawn = player.getBedSpawnLocation();
-        List<String> effects = player.getActivePotionEffects().stream().map(PlayerService::describeEffect).toList();
+        Location respawn = player.getRespawnLocation();
+        List<PotionEffect> effects = List.copyOf(player.getActivePotionEffects());
         long firstPlayed = player.getFirstPlayed();
         return new PlayerSnapshot(
                 player.getUniqueId(),
@@ -139,7 +140,7 @@ public final class PlayerService {
         }
         long firstPlayed = offline.getFirstPlayed();
         long lastSeen = offline.getLastSeen();
-        Location respawn = offline.getBedSpawnLocation();
+        Location respawn = offline.getRespawnLocation();
         return Optional.of(new PlayerSnapshot(
                 playerId,
                 offline.getName() != null ? offline.getName() : playerId.toString(),
@@ -164,14 +165,8 @@ public final class PlayerService {
         return attribute != null ? attribute.getValue() : null;
     }
 
-    private static String describeEffect(PotionEffect effect) {
-        long totalSeconds = effect.getDuration() / 20L;
-        return "%s %d (%d:%02d)".formatted(
-                effect.getType().getName(), effect.getAmplifier() + 1, totalSeconds / 60, totalSeconds % 60);
-    }
-
     private static String formatLocation(Location location) {
         String world = location.getWorld() != null ? location.getWorld().getName() : "?";
-        return "%s @ %.1f, %.1f, %.1f".formatted(world, location.getX(), location.getY(), location.getZ());
+        return String.format(Locale.ROOT, "%s @ %.1f, %.1f, %.1f", world, location.getX(), location.getY(), location.getZ());
     }
 }

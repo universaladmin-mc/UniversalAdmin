@@ -10,7 +10,7 @@ group = "dev.universaladmin"
 // breaking change without a major version - see
 // docs/architecture/decisions/0010-extension-api.md. The api/ and extension
 // projects take this same version.
-version = "1.8.0"
+version = "1.9.0"
 description = "UniversalAdmin - a universal admin platform for Paper servers"
 
 java {
@@ -147,8 +147,43 @@ val verifyShadedJarDrivers = tasks.register<JavaExec>("verifyShadedJarDrivers") 
     mainClass.set("dev.universaladmin.storage.jdbc.ShadedJarDriverSmokeTestMain")
 }
 
+// Compiling against one Paper version proves nothing for the others: a
+// method whose signature differs between Adventure 4 (Paper 1.21) and
+// Adventure 5 (Paper 26) compiles and then fails with NoSuchMethodError on
+// the other one - 1.8.0's player profile did exactly that on 1.21. This
+// checks every API member the built jar uses against the oldest supported
+// version, the last 1.21 and the one compiled against
+// (gradle/binary-check/BinCheck.java).
+val binaryCompatibilityApis = listOf("1.21.7-R0.1-SNAPSHOT", "1.21.11-R0.1-SNAPSHOT", property("paperApiVersion").toString()).distinct()
+val binaryCompatibility = tasks.register("binaryCompatibility") {
+    group = "verification"
+    description = "Checks every Paper/Adventure member the plugin jar uses against the oldest and newest supported Paper API."
+    dependsOn(tasks.jar, tasks.named("shadowJar"))
+    val pluginJar = tasks.named<ShadowJar>("shadowJar").flatMap { it.archiveFile }
+    val java25 = javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(25)) }
+    val checker = layout.projectDirectory.file("gradle/binary-check/BinCheck.java").asFile
+    val output = layout.buildDirectory.dir("binary-check")
+    doLast {
+        binaryCompatibilityApis.forEach { version ->
+            val api = configurations.detachedConfiguration(dependencies.create("io.papermc.paper:paper-api:$version")).resolve()
+            val list = output.get().file("paper-api-$version.txt").asFile
+            list.parentFile.mkdirs()
+            list.writeText(api.joinToString("\n") { it.absolutePath })
+            val result = providers.exec {
+                commandLine(java25.get().executablePath.asFile.absolutePath, checker.absolutePath,
+                        pluginJar.get().asFile.absolutePath, list.absolutePath)
+                isIgnoreExitValue = true
+            }
+            logger.lifecycle(result.standardOutput.asText.get().trim())
+            if (result.result.get().exitValue != 0) {
+                throw GradleException("The plugin jar uses API that Paper $version does not have - see above.")
+            }
+        }
+    }
+}
+
 tasks.check {
-    dependsOn(verifyShadedJarDrivers)
+    dependsOn(verifyShadedJarDrivers, binaryCompatibility)
 }
 
 // Single source of truth for "what version is this?" in CI. The release

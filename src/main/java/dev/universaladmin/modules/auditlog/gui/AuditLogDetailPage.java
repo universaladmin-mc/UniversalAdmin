@@ -3,11 +3,14 @@ package dev.universaladmin.modules.auditlog.gui;
 import dev.universaladmin.action.ActorType;
 import dev.universaladmin.audit.AuditEvent;
 import dev.universaladmin.gui.AbstractGuiPage;
+import dev.universaladmin.gui.GuiButton;
 import dev.universaladmin.gui.GuiFramework;
+import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.gui.GuiItem;
-import dev.universaladmin.gui.GuiLayout;
 import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRenderContext;
+import dev.universaladmin.gui.GuiRows;
+import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.localization.MessageService;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -50,42 +53,48 @@ public final class AuditLogDetailPage extends AbstractGuiPage {
 
     @Override
     protected void renderContent(GuiRenderContext context) {
-        List<GuiItem> fields = new ArrayList<>();
-        fields.add(actorField());
-        fields.add(field(Material.WRITABLE_BOOK, "audit.gui.field.action", event.type().toString()));
-        if (event.module() != null) {
-            fields.add(field(Material.CHEST, "audit.gui.field.module", event.module()));
-        }
+        GuiView view = context.view();
+        Player viewer = context.viewer();
+        List<GuiButton> entry = new ArrayList<>();
+        entry.add(GuiButton.display(GuiItem.of(Material.WRITABLE_BOOK,
+                AuditTexts.title(messages, event).colorIfAbsent(NamedTextColor.WHITE),
+                List.of(AuditTexts.sentence(messages, event).colorIfAbsent(NamedTextColor.GRAY),
+                        Component.text(event.type().toString(), NamedTextColor.DARK_GRAY)))));
+        entry.add(GuiButton.display(actorField()));
         if (event.target() != null) {
-            fields.add(field(Material.TARGET, "audit.gui.field.target",
-                    event.target().displayName() + " (" + event.target().type() + ": " + event.target().id() + ")"));
+            entry.add(GuiButton.display(field(Material.TARGET, "audit.gui.field.target",
+                    event.target().displayName() + " (" + event.target().type() + ": " + event.target().id() + ")")));
         }
-        fields.add(field(Material.CLOCK, "audit.gui.field.time", TIME_FORMAT.format(event.timestamp())));
-        fields.add(field(Material.COMPASS, "audit.gui.field.source", event.source().toString()));
-        fields.add(field(event.success() ? Material.LIME_DYE : Material.RED_DYE, "audit.gui.field.result",
-                text(event.success() ? "audit.gui.result.success" : "audit.gui.result.failure")));
+        entry.add(GuiButton.display(field(Material.CLOCK, "audit.gui.field.time", TIME_FORMAT.format(event.timestamp()))));
+        entry.add(GuiButton.display(field(Material.COMPASS, "audit.gui.field.source",
+                text("audit.gui.source." + event.source().name().toLowerCase(Locale.ROOT)))));
+        entry.add(GuiButton.display(field(event.success() ? Material.LIME_DYE : Material.RED_DYE, "audit.gui.field.result",
+                text(event.success() ? "audit.gui.result.success" : "audit.gui.result.failure"))));
+        GuiRows.place(view, viewer, 0, 0, GuiGlass.LIGHT_BLUE, text("audit.gui.row.entry"), entry);
+
+        List<GuiButton> details = new ArrayList<>();
         if (event.reason() != null) {
-            fields.add(field(Material.PAPER, "audit.gui.field.reason", event.reason()));
+            details.add(GuiButton.display(field(Material.PAPER, "audit.gui.field.reason", event.reason())));
         }
         if (event.oldValue() != null || event.newValue() != null) {
-            fields.add(field(Material.HOPPER, "audit.gui.field.old-new",
-                    (event.oldValue() == null ? "?" : event.oldValue()) + " -> " + (event.newValue() == null ? "?" : event.newValue())));
+            details.add(GuiButton.display(field(Material.HOPPER, "audit.gui.field.old-new",
+                    (event.oldValue() == null ? "?" : event.oldValue()) + " -> " + (event.newValue() == null ? "?" : event.newValue()))));
         }
         if (event.world() != null || event.position() != null) {
             String location = (event.world() == null ? "" : event.world())
                     + (event.position() == null ? "" : " " + formatPosition(event));
-            fields.add(field(Material.MAP, "audit.gui.field.location", location.trim()));
+            details.add(GuiButton.display(field(Material.MAP, "audit.gui.field.location", location.trim())));
         }
-        if (!event.metadata().isEmpty()) {
-            fields.add(metadataField());
+        if (event.module() != null) {
+            details.add(GuiButton.display(field(Material.CHEST, "audit.gui.field.module", event.module())));
+        }
+        if (event.metadata().keySet().stream().anyMatch(key -> !AuditTexts.isArg(key))) {
+            details.add(GuiButton.display(metadataField()));
         }
         if (event.correlationId() != null) {
-            fields.add(field(Material.STRING, "audit.gui.field.correlation-id", event.correlationId()));
+            details.add(GuiButton.display(field(Material.STRING, "audit.gui.field.correlation-id", event.correlationId())));
         }
-
-        for (int i = 0; i < fields.size() && i < GuiLayout.contentSize(); i++) {
-            context.view().place(GuiLayout.contentSlot(i), fields.get(i));
-        }
+        GuiRows.place(view, viewer, 1, 0, GuiGlass.LIGHT_BLUE, text("audit.gui.row.details"), details);
     }
 
     private String formatPosition(AuditEvent event) {
@@ -112,6 +121,9 @@ public final class AuditLogDetailPage extends AbstractGuiPage {
     private GuiItem metadataField() {
         List<Component> lore = new ArrayList<>();
         for (Map.Entry<String, Object> entry : event.metadata().entrySet()) {
+            if (AuditTexts.isArg(entry.getKey())) {
+                continue;
+            }
             lore.add(Component.text(entry.getKey() + ": " + entry.getValue(), NamedTextColor.GRAY));
         }
         return GuiItem.of(Material.BOOK, text("audit.gui.field.metadata"), lore);
