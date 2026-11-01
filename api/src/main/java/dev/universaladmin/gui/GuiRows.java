@@ -13,8 +13,8 @@ import org.bukkit.entity.Player;
  * numbered 0 to 3, columns 0 to 8.
  *
  * <pre>{@code
- * GuiRows.place(view, viewer, 0, 0, GuiGlass.LIGHT_BLUE, text("my.status"), statusTiles);
- * GuiRows.place(view, viewer, 2, 0, GuiGlass.RED, text("my.danger"), dangerousButtons);
+ * GuiRows.place(view, viewer, 0, 0, GuiGlass.LIGHT_BLUE, statusLabel, statusTiles);
+ * GuiRows.place(view, viewer, 2, 0, GuiGlass.RED, dangerLabel, dangerousButtons);
  * }</pre>
  *
  * @since 1.8

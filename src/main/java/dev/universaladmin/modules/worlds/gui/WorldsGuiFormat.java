@@ -29,6 +29,6 @@ final class WorldsGuiFormat {
     }
 
     static String coordinates(Location location) {
-        return "%.1f, %.1f, %.1f".formatted(location.getX(), location.getY(), location.getZ());
+        return String.format(Locale.ROOT, "%.1f, %.1f, %.1f", location.getX(), location.getY(), location.getZ());
     }
 }

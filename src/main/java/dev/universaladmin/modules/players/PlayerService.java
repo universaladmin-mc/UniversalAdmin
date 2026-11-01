@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -166,6 +167,6 @@ public final class PlayerService {
 
     private static String formatLocation(Location location) {
         String world = location.getWorld() != null ? location.getWorld().getName() : "?";
-        return "%s @ %.1f, %.1f, %.1f".formatted(world, location.getX(), location.getY(), location.getZ());
+        return String.format(Locale.ROOT, "%s @ %.1f, %.1f, %.1f", world, location.getX(), location.getY(), location.getZ());
     }
 }
